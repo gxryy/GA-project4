@@ -1,0 +1,32 @@
+{
+  "user": {
+    "username": "lala2@teletubbies.com",
+    "pool": {
+      "userPoolId": "ap-southeast-1_6SUbTU8Ow",
+      "clientId": "2vhqsqa4o3vddvl676d7rui1ac",
+      "client": {
+        "endpoint": "https://cognito-idp.ap-southeast-1.amazonaws.com/",
+        "fetchOptions": {}
+      },
+      "advancedSecurityDataCollectionFlag": true,
+      "storage": { "temp": "[object Object]" }
+    },
+    "Session": null,
+    "client": {
+      "endpoint": "https://cognito-idp.ap-southeast-1.amazonaws.com/",
+      "fetchOptions": {}
+    },
+    "signInUserSession": null,
+    "authenticationFlowType": "USER_SRP_AUTH",
+    "storage": { "temp": "[object Object]" },
+    "keyPrefix": "CognitoIdentityServiceProvider.2vhqsqa4o3vddvl676d7rui1ac",
+    "userDataKey": "CognitoIdentityServiceProvider.2vhqsqa4o3vddvl676d7rui1ac.lala2@teletubbies.com.userData"
+  },
+  "userConfirmed": false,
+  "userSub": "be90755b-76e4-449e-a8af-73c19b2c0c73",
+  "codeDeliveryDetails": {
+    "AttributeName": "email",
+    "DeliveryMedium": "EMAIL",
+    "Destination": "l***@t***"
+  }
+}

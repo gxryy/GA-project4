@@ -1,37 +1,34 @@
-import React from "react";
-// import "../dependencies/jquery-3.1.0.js";
-import "../dependencies/config";
-// import "../dependencies/cognito-auth";
+import React, { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import CognitoCtx from "../context/CognitoCtx";
+import signUpSuccess from "../response/signUpSuccess.json";
+
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
-var poolData = {
-  UserPoolId: window._config.cognito.userPoolId,
-  ClientId: window._config.cognito.userPoolClientId,
-};
-
-var userPool;
-
-userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+// ---------- COGNITO CODES ---------- //
 
 const SignUp = () => {
-  function toUsername(email) {
-    return email.replace("@", "-at-");
-  }
+  const CognitoContext = useContext(CognitoCtx);
+  const navigate = useNavigate();
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    let firstName = event.target.firstName.value;
+    let lastName = event.target.lastName.value;
     let email = event.target.emailInputRegister.value;
     let password = event.target.passwordInputRegister.value;
     let password2 = event.target.password2InputRegister.value;
 
     var onSuccess = function registerSuccess(result) {
+      console.log(result);
       var cognitoUser = result.user;
-      console.log("user name is " + cognitoUser.getUsername());
+      // console.log("user name is " + cognitoUser.getUsername());
       var confirmation =
         "Registration successful. Please check your email inbox or spam folder for your verification code.";
       if (confirmation) {
-        window.location.href = "verify.html";
+        alert(confirmation);
+        navigate("/verify", { state: { email } });
       }
     };
     var onFailure = function registerFailure(err) {
@@ -41,58 +38,40 @@ const SignUp = () => {
     };
 
     if (password === password2) {
-      register(email, password, onSuccess, onFailure);
+      let attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute({
+        Name: "email",
+        Value: email,
+      });
+
+      let attributeFirstName = new AmazonCognitoIdentity.CognitoUserAttribute({
+        Name: "given_name",
+        Value: firstName,
+      });
+
+      let attributeLastName = new AmazonCognitoIdentity.CognitoUserAttribute({
+        Name: "family_name",
+        Value: lastName,
+      });
+
+      register(email, password, onSuccess, onFailure, [
+        attributeEmail,
+        attributeFirstName,
+        attributeLastName,
+      ]);
     } else {
       alert("Passwords do not match");
     }
   };
 
-  function register(email, password, onSuccess, onFailure) {
+  function register(email, password, onSuccess, onFailure, attributeList) {
     console.log(`email is ${email}`);
     console.log(`password is ${password}`);
-    var dataEmail = {
-      Name: "email",
-      Value: email,
-    };
-    var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(
-      dataEmail
-    );
-    var datafamilyname = {
-      Name: "family_name",
-      Value: "lastnamehehe",
-    };
+    console.log(attributeList);
 
-    var attributefamilyname = new AmazonCognitoIdentity.CognitoUserAttribute(
-      datafamilyname
-    );
-
-    var datafirstname = {
-      Name: "given_name",
-      Value: "first",
-    };
-
-    var attributegivenname = new AmazonCognitoIdentity.CognitoUserAttribute(
-      datafirstname
-    );
-
-    var datausername = {
-      Name: "preferred_username",
-      Value: "testuser",
-    };
-
-    var attributeusername = new AmazonCognitoIdentity.CognitoUserAttribute(
-      datausername
-    );
-
-    userPool.signUp(
+    CognitoContext.userPool.signUp(
       email,
       password,
-      [
-        attributeEmail,
-        attributefamilyname,
-        attributeusername,
-        attributegivenname,
-      ],
+      attributeList,
       null,
       function signUpCallback(err, result) {
         if (!err) {
@@ -102,6 +81,8 @@ const SignUp = () => {
         }
       }
     );
+
+    // onSuccess(signUpSuccess);
   }
 
   return (
@@ -109,6 +90,18 @@ const SignUp = () => {
       <h2>This is the signup component</h2>
 
       <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          id="firstName"
+          placeholder="First Name"
+          required
+        ></input>
+        <input
+          type="text"
+          id="lastName"
+          placeholder="Last Name"
+          required
+        ></input>
         <input
           type="email"
           id="emailInputRegister"
@@ -120,14 +113,15 @@ const SignUp = () => {
           type="password"
           id="passwordInputRegister"
           placeholder="Password"
-          pattern=".*"
+          pattern=".{6,}"
+          title="Six or more characters"
           required
         />
         <input
           type="password"
           id="password2InputRegister"
           placeholder="Confirm Password"
-          pattern=".*"
+          pattern=".{6,}"
           required
         />
 
