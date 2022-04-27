@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import CognitoCtx from "./context/CognitoCtx";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
+import Signout from "./components/Signout";
 import Verify from "./components/Verify";
 import Home from "./components/Home";
+import Test from "./components/Test";
 import "./dependencies/config";
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
@@ -19,13 +21,15 @@ export default function App() {
   return (
     <>
       <div className="App">
-        <h1>App component</h1>
+        <h4>App Component</h4>
         <CognitoCtx.Provider value={{ userPool }}>
           <Routes>
             <Route path="/" element={<Home />}></Route>
             <Route path="/signup" element={<SignUp />}></Route>
             <Route path="/signin" element={<SignIn />}></Route>
+            <Route path="/signout" element={<Signout />}></Route>
             <Route path="/verify" element={<Verify />}></Route>
+            <Route path="/test" element={<Test />}></Route>
           </Routes>
         </CognitoCtx.Provider>
       </div>

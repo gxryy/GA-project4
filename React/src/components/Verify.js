@@ -4,7 +4,7 @@ import CognitoCtx from "../context/CognitoCtx";
 
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
-const Verify = (props) => {
+const Verify = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const CognitoContext = useContext(CognitoCtx);
