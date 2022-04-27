@@ -5,8 +5,6 @@ import signUpSuccess from "../response/signUpSuccess.json";
 
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
-// ---------- COGNITO CODES ---------- //
-
 const SignUp = () => {
   const CognitoContext = useContext(CognitoCtx);
   const navigate = useNavigate();

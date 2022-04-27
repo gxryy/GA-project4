@@ -32,6 +32,7 @@ const SignIn = () => {
         console.log(result);
         var accessToken = result.getAccessToken().getJwtToken();
         console.log(`accessToken is ${accessToken}`);
+        navigate("/drive");
       },
 
       onFailure: function (err) {
