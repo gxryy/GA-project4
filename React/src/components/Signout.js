@@ -5,7 +5,7 @@ const Signout = () => {
   const CognitoContext = useContext(CognitoCtx);
 
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
-  cognitoUser.signOut();
+  cognitoUser?.signOut();
 
   return <div></div>;
 };

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import CognitoCtx from "../context/CognitoCtx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -7,31 +7,39 @@ const Drive = () => {
   const navigate = useNavigate();
   const CognitoContext = useContext(CognitoCtx);
   const [file, setFile] = useState();
-
-  const notAuth = () => {
-    console.log(`Authentication Failed. Please Sign in`);
-    setTimeout(() => {
-      navigate("/signin");
-    }, 100);
-  };
-
-  let authToken = "";
+  let authToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
 
-  if (cognitoUser) {
-    cognitoUser.getSession(function sessionCallback(err, session) {
-      if (err) {
-        notAuth();
-      } else if (!session.isValid()) {
-        notAuth();
-      } else {
-        console.log(`JWT TOKEN`);
-        authToken = session.getIdToken().getJwtToken();
-      }
-    });
-  } else {
-    notAuth();
-  }
+  useEffect(() => {
+    if (cognitoUser) {
+      cognitoUser.getSession(function sessionCallback(err, session) {
+        if (err) {
+          navigate("/signin");
+        } else if (!session.isValid()) {
+          navigate("/signin");
+        } else {
+          authToken = session.getIdToken().getJwtToken();
+        }
+      });
+    } else {
+      navigate("/");
+    }
+  }, []);
+
+  //   if (cognitoUser) {
+  //     cognitoUser.getSession(function sessionCallback(err, session) {
+  //       if (err) {
+  //         notAuth();
+  //       } else if (!session.isValid()) {
+  //         notAuth();
+  //       } else {
+  //         console.log(`JWT TOKEN`);
+  //         authToken = session.getIdToken().getJwtToken();
+  //       }
+  //     });
+  //   } else {
+  //     notAuth();
+  //   }
   // ----- FUNCTIONS ----- //
   async function postFile({ file, description }) {
     const formData = new FormData();
@@ -39,7 +47,10 @@ const Drive = () => {
     formData.append("username", cognitoUser.username);
 
     const result = await axios.post("http://localhost:5001/files", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        Authorization: authToken,
+        "Content-Type": "multipart/form-data",
+      },
     });
     return result.data;
   }

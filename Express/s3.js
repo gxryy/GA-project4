@@ -14,16 +14,24 @@ const s3 = new S3({
 });
 
 // upload a file to s3
-const uploadFile = (file) => {
+const uploadFile = async (file) => {
   const fileStream = fs.createReadStream(file.path);
 
   const uploadParams = {
     Bucket: bucketName,
     Body: fileStream,
     Key: file.filename,
+    ServerSideEncryption: "AES256",
   };
 
-  return s3.putObject(uploadParams).promise();
+  try {
+    let response = await s3.putObject(uploadParams).promise();
+    console.log(response);
+    console.log(`successfully uploaded`);
+    return response;
+  } catch (err) {
+    throw new Error(err);
+  }
 };
 exports.uploadFile = uploadFile;
 

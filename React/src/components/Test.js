@@ -24,7 +24,7 @@ const Test = () => {
     console.log("null");
   }
 
-  cognitoUser.getUserAttributes(function (err, result) {
+  cognitoUser?.getUserAttributes(function (err, result) {
     if (err) {
       alert(err.message || JSON.stringify(err));
       return;
