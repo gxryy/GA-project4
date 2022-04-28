@@ -44,7 +44,6 @@ app.post("/files", upload.single("file"), async (req, res) => {
 });
 
 app.post("/getObjects", async (req, res) => {
-  console.log(`in get objects endpoint`);
   username = req.body.username;
   path = req.body.path;
   params = {
@@ -56,7 +55,25 @@ app.post("/getObjects", async (req, res) => {
   let response = await listObjects(params);
   console.log(response);
 
-  res.send("ok");
+  res.send(response);
+});
+
+app.post("/getStorageUsed", async (req, res) => {
+  username = req.body.username;
+  params = {
+    Prefix: username + "/",
+    Delimiter: "",
+    MaxKeys: 1000,
+  };
+  let size = 0;
+  let response = await listObjects(params);
+  response.objectList.forEach((object) => {
+    size += object.Size;
+  });
+  console.log(`total size: ${size}`);
+  console.log(`number of files: ${response.objectList.length}`);
+
+  res.send({ totalSize: size, numberOfObjects: response.objectList.length });
 });
 
 app.post("/test", async (req, res) => {
