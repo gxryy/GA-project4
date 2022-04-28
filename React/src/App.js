@@ -8,6 +8,7 @@ import Verify from "./components/Verify";
 import Home from "./components/Home";
 import Test from "./components/Test";
 import Drive from "./components/Drive";
+import ServerTest from "./components/ServerTest";
 import "./dependencies/config";
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
@@ -29,6 +30,8 @@ export default function App() {
         <a href="/verify"> Verify </a>
         <a href="/test"> Test </a>
         <a href="/drive"> Drive </a>
+        <a href="/servertest"> Server Test </a>
+
         <CognitoCtx.Provider value={{ userPool }}>
           <Routes>
             <Route path="/" element={<Home />}></Route>
@@ -38,6 +41,7 @@ export default function App() {
             <Route path="/verify" element={<Verify />}></Route>
             <Route path="/test" element={<Test />}></Route>
             <Route path="/drive" element={<Drive />}></Route>
+            <Route path="/servertest" element={<ServerTest />}></Route>
           </Routes>
         </CognitoCtx.Provider>
       </div>

@@ -5,7 +5,7 @@ const session = require("express-session");
 var cors = require("cors");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
-const { uploadFile, getFileStream } = require("./s3");
+const { uploadFile, getFileStream, listObjects } = require("./s3");
 const PORT = process.env.PORT || 5001;
 
 // CONFIGURATION
@@ -17,6 +17,7 @@ app.use(express.urlencoded({ extended: false }));
 //UNLINK (to delete files after upload)
 const fs = require("fs");
 const util = require("util");
+const { response } = require("express");
 const unlinkFile = util.promisify(fs.unlink);
 
 // DATA
@@ -40,6 +41,29 @@ app.post("/files", upload.single("file"), async (req, res) => {
     // console.log(result);
     res.send(`ok`);
   }
+});
+
+app.post("/getObjects", async (req, res) => {
+  console.log(`in get objects endpoint`);
+  username = req.body.username;
+  path = req.body.path;
+  params = {
+    Prefix: username + path,
+    Delimiter: "/",
+    MaxKeys: 1000,
+  };
+
+  let response = await listObjects(params);
+  console.log(response);
+
+  res.send("ok");
+});
+
+app.post("/test", async (req, res) => {
+  console.log(`in test endpoint`);
+  response = await listObjects();
+
+  res.send("response");
 });
 
 // Listener

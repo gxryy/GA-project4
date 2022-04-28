@@ -57,10 +57,12 @@ const Drive = () => {
   return (
     <div>
       <h4>Drive component</h4>
-      <p>The auth token {authToken}</p>
+      {/* <p>The auth token {authToken}</p> */}
 
       <input onChange={fileSelected} type="file" accept="*" multiple></input>
       <input type="button" onClick={uploadHandler} value="upload"></input>
+
+      <h3> Files View</h3>
     </div>
   );
 };
