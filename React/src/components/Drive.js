@@ -1,13 +1,18 @@
 import React, { useContext, useState, useEffect } from "react";
 import CognitoCtx from "../context/CognitoCtx";
 import { useNavigate } from "react-router-dom";
+import FileExplorer from "./FileExplorer";
 import axios from "axios";
 
 const Drive = () => {
   const navigate = useNavigate();
   const CognitoContext = useContext(CognitoCtx);
   const [uploadFile, setUploadFile] = useState();
-  const [storageUsed, setStorageUsed] = useState(0);
+  const [storageUsed, setStorageUsed] = useState({
+    totalSize: 0,
+    numberOfObjects: 0,
+  });
+  const [fileList, setFileList] = useState({ objectList: [], folderList: [] });
   let authToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
 
@@ -23,6 +28,7 @@ const Drive = () => {
         }
       });
       getStorageUsed();
+      getFileList("/");
     } else {
       navigate("/");
     }
@@ -91,6 +97,27 @@ const Drive = () => {
     }
   };
 
+  const getFileList = async (path) => {
+    try {
+      let response = await axios.post(
+        "http://localhost:5001/getFileList",
+        {
+          username: cognitoUser.username,
+          path,
+        },
+        {
+          headers: {
+            Authorization: authToken,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setFileList(response.data);
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
+
   const toReadable = (sizeInBytes) => {
     let units = ["bytes", "KB", "MB", "GB", "TB"];
     let size = sizeInBytes;
@@ -119,6 +146,7 @@ const Drive = () => {
       <input type="button" onClick={uploadHandler} value="upload"></input>
 
       <h3> Files View</h3>
+      <FileExplorer fileList={fileList} />
     </div>
   );
 };

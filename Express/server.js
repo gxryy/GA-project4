@@ -23,10 +23,20 @@ const unlinkFile = util.promisify(fs.unlink);
 // DATA
 
 // ROUTES
-app.get("/download/:key", (req, res) => {
-  const key = req.params.key;
+app.post("/download", (req, res) => {
+  console.log(`in download`);
+  console.log(req.body);
+  const key = req.body.Key;
+  console.log(key);
   const readStream = getFileStream(key);
+  // res.setHeader("Content-Disposition", "attachment; filename=hello.png");
+  // res.attachment("pdfname.pdf");
+  // readStream.pipe(res);
+  // res.setHeader("Content-Disposition", 'attachment; filename="example.png"');
+  // res.end(readStream);
   readStream.pipe(res);
+
+  // res.download(readStream, "");
 });
 
 app.post("/files", upload.single("file"), async (req, res) => {
@@ -43,7 +53,7 @@ app.post("/files", upload.single("file"), async (req, res) => {
   }
 });
 
-app.post("/getObjects", async (req, res) => {
+app.post("/getFileList", async (req, res) => {
   username = req.body.username;
   path = req.body.path;
   params = {
