@@ -24,19 +24,13 @@ const unlinkFile = util.promisify(fs.unlink);
 
 // ROUTES
 app.post("/download", (req, res) => {
-  console.log(`in download`);
-  console.log(req.body);
+  console.log(`in downloads`);
   const key = req.body.Key;
-  console.log(key);
   const readStream = getFileStream(key);
-  // res.setHeader("Content-Disposition", "attachment; filename=hello.png");
-  // res.attachment("pdfname.pdf");
-  // readStream.pipe(res);
-  // res.setHeader("Content-Disposition", 'attachment; filename="example.png"');
-  // res.end(readStream);
   readStream.pipe(res);
 
-  // res.download(readStream, "");
+  // ---EXPERIMENT---
+  // res.sendFile(`${__dirname}/test_200.mp4`);
 });
 
 app.post("/files", upload.single("file"), async (req, res) => {
@@ -63,7 +57,7 @@ app.post("/getFileList", async (req, res) => {
   };
 
   let response = await listObjects(params);
-  console.log(response);
+  // console.log(response);
 
   res.send(response);
 });

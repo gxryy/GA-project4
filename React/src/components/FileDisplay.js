@@ -1,8 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CognitoCtx from "../context/CognitoCtx";
-import axios from "axios";
-import AxiosStream from "axios-stream";
 
 const FileDisplay = (props) => {
   const navigate = useNavigate();
@@ -44,53 +42,31 @@ const FileDisplay = (props) => {
   };
 
   const clickHandler = async () => {
-    try {
-      let downFileName = fileName;
-      let extensionName = "";
-      let axiosConfig = {
-        method: "post",
-        url: "http://localhost:5001/download",
-        // responseType: "stream",
-        headers: {
-          Authorization: authToken,
-          "Content-Type": "application/json",
-        },
-        data: {
-          username: cognitoUser.username,
-          Key: file.Key,
-        },
-      };
-      AxiosStream.download(downFileName, extensionName, axiosConfig);
+    // --- FETCH ---
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
 
-      // let response = await axios({
-      //   method: "get",
-      //   url: "http://localhost:5001/download",
-      //   // responseType: "stream",
-      //   headers: {
-      //     Authorization: authToken,
-      //     "Content-Type": "application/json",
-      //   },
-      //   data: {
-      //     username: cognitoUser.username,
-      //     Key: file.Key,
-      //   },
-      // });
-      // console.log(response);
+    let requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: JSON.stringify({
+        username: cognitoUser.username,
+        Key: file.Key,
+      }),
+      redirect: "follow",
+    };
 
-      // download(response.data, fileName);
-
-      // response.data.pipe(fs.createWriteStream("/temp/my.pdf"));
-
-      // const blob = new Blob([response.data], {
-      //   type: "application/octet-stream",
-      // });
-
-      // saveAs(blob, fileName);
-
-      // console.log(response);
-    } catch (err) {
-      throw new Error(err);
-    }
+    fetch("http://127.0.0.1:5001/download", requestOptions)
+      .then((response) => {
+        return response.blob();
+      })
+      .then((data) => {
+        var a = document.createElement("a");
+        a.href = window.URL.createObjectURL(data);
+        a.download = fileName;
+        a.click();
+      })
+      .catch((error) => console.log("error", error));
   };
 
   return (
