@@ -7,6 +7,7 @@ const Drive = () => {
   const navigate = useNavigate();
   const CognitoContext = useContext(CognitoCtx);
   const [file, setFile] = useState();
+  const [storageUsed, setStorageUsed] = useState(-1);
   let authToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
 
@@ -21,38 +22,28 @@ const Drive = () => {
           authToken = session.getIdToken().getJwtToken();
         }
       });
+      getStorageUsed();
     } else {
       navigate("/");
     }
   }, []);
 
-  //   if (cognitoUser) {
-  //     cognitoUser.getSession(function sessionCallback(err, session) {
-  //       if (err) {
-  //         notAuth();
-  //       } else if (!session.isValid()) {
-  //         notAuth();
-  //       } else {
-  //         console.log(`JWT TOKEN`);
-  //         authToken = session.getIdToken().getJwtToken();
-  //       }
-  //     });
-  //   } else {
-  //     notAuth();
-  //   }
   // ----- FUNCTIONS ----- //
-  async function postFile({ file, description }) {
+  async function postFile({ file }) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("username", cognitoUser.username);
-
-    const result = await axios.post("http://localhost:5001/files", formData, {
-      headers: {
-        Authorization: authToken,
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return result.data;
+    try {
+      const result = await axios.post("http://localhost:5001/files", formData, {
+        headers: {
+          Authorization: authToken,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return result.data;
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
   const fileSelected = (event) => {
@@ -65,10 +56,44 @@ const Drive = () => {
     const result = await postFile({ file });
   };
 
+  const getStorageUsed = async () => {
+    try {
+      let response = await axios.post(
+        "http://localhost:5001/getStorageUsed",
+        {
+          username: cognitoUser.username,
+        },
+        {
+          headers: {
+            Authorization: authToken,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setStorageUsed(response.data);
+    } catch (err) {
+      throw new Error(err);
+    }
+  };
+
+  const toReadable = (sizeInBytes) => {
+    let units = ["bytes", "KB", "MB", "GB", "TB"];
+    let size = sizeInBytes;
+    let counter = 0;
+    while (size > 1000) {
+      size = size / 1000;
+      counter++;
+    }
+    size = (Math.round(size * 100) / 100).toFixed(2);
+    return size + units[counter];
+  };
+
   return (
     <div>
       <h4>Drive component</h4>
       {/* <p>The auth token {authToken}</p> */}
+
+      <h2>Total Storage Used: {toReadable(storageUsed.totalSize)}</h2>
 
       <input onChange={fileSelected} type="file" accept="*" multiple></input>
       <input type="button" onClick={uploadHandler} value="upload"></input>

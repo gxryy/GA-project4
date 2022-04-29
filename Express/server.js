@@ -70,8 +70,6 @@ app.post("/getStorageUsed", async (req, res) => {
   response.objectList.forEach((object) => {
     size += object.Size;
   });
-  console.log(`total size: ${size}`);
-  console.log(`number of files: ${response.objectList.length}`);
 
   res.send({ totalSize: size, numberOfObjects: response.objectList.length });
 });
