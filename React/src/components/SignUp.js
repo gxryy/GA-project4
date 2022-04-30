@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import CognitoCtx from "../context/CognitoCtx";
-import signUpSuccess from "../response/signUpSuccess.json";
 
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 

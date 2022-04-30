@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import CognitoCtx from "../context/CognitoCtx";
+import ExplorerCtx from "../context/ExplorerCtx";
 import { useNavigate } from "react-router-dom";
 import FileExplorer from "./FileExplorer";
 import axios from "axios";
@@ -7,12 +8,18 @@ import axios from "axios";
 const Drive = () => {
   const navigate = useNavigate();
   const CognitoContext = useContext(CognitoCtx);
+
   const [uploadFile, setUploadFile] = useState();
   const [storageUsed, setStorageUsed] = useState({
     totalSize: 0,
     numberOfObjects: 0,
   });
-  const [fileList, setFileList] = useState({ objectList: [], folderList: [] });
+  const [fileList, setFileList] = useState({
+    objectList: [],
+    folderList: [],
+    currentDirectory: "/",
+  });
+
   let authToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
 
@@ -28,7 +35,7 @@ const Drive = () => {
         }
       });
       getStorageUsed();
-      getFileList("/");
+      getFileList(fileList.currentDirectory);
     } else {
       navigate("/");
     }
@@ -38,6 +45,7 @@ const Drive = () => {
 
   const uploadHandler = async () => {
     const postFile = (file) => {
+      console.log(file);
       return new Promise(async (resolve, reject) => {
         console.log(`posting`);
         const formData = new FormData();
@@ -146,7 +154,9 @@ const Drive = () => {
       <input type="button" onClick={uploadHandler} value="upload"></input>
 
       <h3> Files View</h3>
-      <FileExplorer fileList={fileList} />
+      <ExplorerCtx.Provider value={{ fileList, setFileList }}>
+        <FileExplorer />
+      </ExplorerCtx.Provider>
     </div>
   );
 };

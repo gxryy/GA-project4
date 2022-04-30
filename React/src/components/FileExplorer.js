@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import FolderDisplay from "./FolderDisplay";
 import FileDisplay from "./FileDisplay";
+import ExplorerCtx from "../context/ExplorerCtx";
 import { nanoid } from "nanoid";
 
-const FileExplorer = (props) => {
-  let fileList = props.fileList;
+const FileExplorer = () => {
+  const ExplorerContext = useContext(ExplorerCtx);
+  let fileList = ExplorerContext.fileList;
   console.log(fileList);
 
   return (

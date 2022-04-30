@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import CognitoCtx from "./context/CognitoCtx";
+import ExplorerCtx from "./context/ExplorerCtx";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
 import Signout from "./components/Signout";
@@ -10,6 +11,7 @@ import Test from "./components/Test";
 import Drive from "./components/Drive";
 import ServerTest from "./components/ServerTest";
 import "./dependencies/config";
+import FolderDisplay from "./components/FolderDisplay";
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 export default function App() {
@@ -17,6 +19,8 @@ export default function App() {
     UserPoolId: window._config.cognito.userPoolId,
     ClientId: window._config.cognito.userPoolClientId,
   };
+
+  const [fileList, setFileList] = useState({ objectList: [], folderList: [] });
 
   let userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 

@@ -48,8 +48,11 @@ app.post("/files", upload.single("file"), async (req, res) => {
 });
 
 app.post("/getFileList", async (req, res) => {
+  console.log(`in`);
   username = req.body.username;
   path = req.body.path;
+  console.log(username);
+  console.log(path);
   params = {
     Prefix: username + path,
     Delimiter: "/",
@@ -57,7 +60,8 @@ app.post("/getFileList", async (req, res) => {
   };
 
   let response = await listObjects(params);
-  // console.log(response);
+  response = { ...response, currentDirectory: path };
+  console.log(response);
 
   res.send(response);
 });
