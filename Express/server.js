@@ -38,16 +38,16 @@ app.post("/download", (req, res) => {
   // res.sendFile(`${__dirname}/test_200.mp4`);
 });
 
-app.post("/files", upload.single("file"), async (req, res) => {
+app.post("/upload", upload.single("file"), async (req, res) => {
   console.log(`something came in`);
   if (req.file) {
     const file = req.file;
     let username = req.body.username;
-    file.filename = username + "/" + file.originalname;
-    console.log(file);
+    let path = req.body.path;
+    file.filename = username + path + file.originalname;
+    console.log(file.filename);
     const result = await uploadFile(file);
     await unlinkFile(file.path);
-    // console.log(result);
     res.send(`ok`);
   }
 });
@@ -63,7 +63,6 @@ app.post("/getFileList", async (req, res) => {
 
   let response = await listObjects(params);
   response = { ...response, currentDirectory: path };
-  console.log(response);
 
   res.send(response);
 });
