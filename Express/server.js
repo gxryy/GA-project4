@@ -5,7 +5,12 @@ const session = require("express-session");
 var cors = require("cors");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
-const { uploadFile, getFileStream, listObjects } = require("./s3");
+const {
+  uploadFile,
+  getFileStream,
+  listObjects,
+  createFolder,
+} = require("./s3");
 const PORT = process.env.PORT || 5001;
 
 // CONFIGURATION
@@ -48,11 +53,8 @@ app.post("/files", upload.single("file"), async (req, res) => {
 });
 
 app.post("/getFileList", async (req, res) => {
-  console.log(`in`);
   username = req.body.username;
   path = req.body.path;
-  console.log(username);
-  console.log(path);
   params = {
     Prefix: username + path,
     Delimiter: "/",
@@ -87,6 +89,13 @@ app.post("/test", async (req, res) => {
   response = await listObjects();
 
   res.send("response");
+});
+
+app.post("/createFolder", async (req, res) => {
+  username = req.body.username;
+  path = req.body.path;
+  let response = await createFolder(username + path);
+  res.send(response);
 });
 
 // Listener

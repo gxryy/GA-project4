@@ -153,7 +153,6 @@ const Drive = () => {
       ></input>
       <input type="button" onClick={uploadHandler} value="upload"></input>
 
-      <h3> Files View</h3>
       <ExplorerCtx.Provider value={{ fileList, setFileList }}>
         <FileExplorer />
       </ExplorerCtx.Provider>

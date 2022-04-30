@@ -77,3 +77,22 @@ const listObjects = (params) => {
   });
 };
 exports.listObjects = listObjects;
+
+const createFolder = async (path) => {
+  const uploadParams = {
+    Bucket: bucketName,
+    Body: "",
+    Key: path,
+    ServerSideEncryption: "AES256",
+  };
+
+  try {
+    let response = await s3.putObject(uploadParams).promise();
+    console.log(response);
+    console.log(`successfully created`);
+    return response;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+exports.createFolder = createFolder;
