@@ -35,6 +35,20 @@ const uploadFile = async (file) => {
 };
 exports.uploadFile = uploadFile;
 
+const deleteFile = async (filename) => {
+  try {
+    let response = await s3
+      .deleteObject({ Bucket: bucketName, Key: filename })
+      .promise();
+    console.log(response);
+    console.log(`successfully DELETED`);
+    return response;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+exports.deleteFile = deleteFile;
+
 // download a file from s3
 const getFileStream = (fileKey) => {
   console.log(`in s3 getfilestream`);

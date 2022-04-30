@@ -10,6 +10,7 @@ const {
   getFileStream,
   listObjects,
   createFolder,
+  deleteFile,
 } = require("./s3");
 const PORT = process.env.PORT || 5001;
 
@@ -50,6 +51,13 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     await unlinkFile(file.path);
     res.send(`ok`);
   }
+});
+
+app.delete("/delete", async (req, res) => {
+  console.log(`deleting`);
+  filename = req.body.filename;
+  let response = await deleteFile(filename);
+  res.send(response);
 });
 
 app.post("/getFileList", async (req, res) => {

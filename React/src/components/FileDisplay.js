@@ -69,10 +69,33 @@ const FileDisplay = (props) => {
       .catch((error) => console.log("error", error));
   };
 
+  const deleteHandler = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      filename: file.Key,
+    });
+
+    var requestOptions = {
+      method: "DELETE",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("http://127.0.0.1:5001/delete", requestOptions)
+      .then((response) => response.text())
+      .then((result) => console.log(result))
+      .catch((error) => console.log("error", error));
+  };
+
   return (
     <div>
-      <p onClick={clickHandler}>{fileName}</p> {toReadable(file.Size)}{" "}
-      {file.LastModified}
+      <p onClick={clickHandler}>{fileName}</p>{" "}
+      <input type="button" value="delete" onClick={deleteHandler}></input>
+      {toReadable(file.Size)} {file.LastModified}
+      <hr />
     </div>
   );
 };
