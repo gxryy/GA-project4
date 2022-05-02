@@ -2,8 +2,11 @@
 // DEPENDENCIES
 require("dotenv").config();
 const express = require("express");
-var cors = require("cors");
+const cors = require("cors");
+const request = require("request");
 const multer = require("multer");
+const jwt_decode = require("jwt-decode");
+
 const upload = multer({ dest: "uploads/" });
 const {
   uploadFile,
@@ -31,7 +34,62 @@ const util = require("util");
 const { response } = require("express");
 const unlinkFile = util.promisify(fs.unlink);
 
-// DATA
+// VARIABLES
+let JWKs = [];
+
+// FUNCTIONS
+
+const fetchJWKs = () => {
+  let options = {
+    method: "GET",
+    url: `https://cognito-idp.${process.env.AWS_COGNITO_REGION}.amazonaws.com/${process.env.AWS_COGNITO_USERPOOLID}/.well-known/jwks.json`,
+    headers: {},
+  };
+  request(options, (error, response) => {
+    if (error) throw new Error(error);
+    JWKs = JSON.parse(response.body);
+  });
+};
+
+const checkJWTMiddleware = (req, res, next) => {
+  const invalidResponse = () => {
+    res.sendStatus(404);
+  };
+  const ignored_routes = ["/random-url", "/test"];
+  if (ignored_routes.includes(req.path)) {
+    next();
+  } else {
+    console.log(`JWT token validator`);
+    token = req.body.accessToken;
+    username = req.body.username;
+    try {
+      // decoding JWT
+      let payload = jwt_decode(token);
+      // validating kid with jwks
+      let { kid, alg } = jwt_decode(token, { header: true });
+      let validkid = false;
+      JWKs.keys.map((key) => {
+        if (!validkid) {
+          key.kid === kid ? (validkid = true) : (validkid = false);
+        }
+      });
+      if (!validkid) invalidResponse();
+      // console.log(`kid valid`);
+      // Validing username claim
+      if (payload.username !== username) invalidResponse();
+      // console.log(`username claim valid`);
+      // Validing token not expired
+      if (Math.floor(Date.now() / 1000) > payload.exp) invalidResponse();
+      // console.log(`token not expired`);
+      next();
+    } catch (err) {
+      console.log(err);
+      invalidResponse();
+    }
+  }
+};
+
+app.use(checkJWTMiddleware);
 
 // ROUTES
 app.post("/download", (req, res) => {
@@ -101,12 +159,19 @@ app.post("/createFolder", async (req, res) => {
   res.send(response);
 });
 
-// ---------- DB TESTS ----------
+app.get("/test", async (req, res) => {
+  console.log(`in test endpoint`);
+  // console.log(req.body);
+
+  res.send("ok");
+});
 
 // Listener
 app.listen(PORT, async () => {
-  console.log(`server started on port ${PORT}`);
-
+  console.log(`Starting Server...`);
+  console.log(`fetching JWKs`);
+  fetchJWKs();
   await sequelize.authenticate();
   console.log("Database Connected!");
+  console.log(`Server started on port ${PORT}`);
 });

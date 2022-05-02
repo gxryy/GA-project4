@@ -9,10 +9,10 @@ import axios from "axios";
 const FileExplorer = () => {
   const CognitoContext = useContext(CognitoCtx);
   const ExplorerContext = useContext(ExplorerCtx);
+  let accessToken = CognitoContext.accessToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
   const [uploadFile, setUploadFile] = useState();
 
-  let authToken;
   let fileList = ExplorerContext.fileList;
 
   const createFolderHandler = (event) => {
@@ -27,7 +27,8 @@ const FileExplorer = () => {
       method: "POST",
       headers: myHeaders,
       body: JSON.stringify({
-        username: username,
+        username,
+        accessToken,
         path: `${ExplorerContext.fileList.currentDirectory + folderName}/`,
       }),
       redirect: "follow",
@@ -44,20 +45,21 @@ const FileExplorer = () => {
 
   const uploadHandler = async () => {
     const postFile = (file) => {
-      console.log(file);
+      // console.log(file);
       return new Promise(async (resolve, reject) => {
         console.log(`posting`);
         const formData = new FormData();
         formData.append("file", file);
         formData.append("username", cognitoUser.username);
         formData.append("path", fileList.currentDirectory);
+        formData.append("accessToken", accessToken);
         try {
           const result = await axios.post(
             "http://localhost:5001/upload",
             formData,
             {
               headers: {
-                Authorization: authToken,
+                Authorization: accessToken,
                 "Content-Type": "multipart/form-data",
               },
             }

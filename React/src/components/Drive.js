@@ -19,8 +19,9 @@ const Drive = () => {
     currentDirectory: "/",
   });
 
-  let authToken;
+  let accessToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
+  let username = cognitoUser.username;
 
   useEffect(() => {
     if (cognitoUser) {
@@ -30,12 +31,14 @@ const Drive = () => {
         } else if (!session.isValid()) {
           navigate("/signin");
         } else {
-          authToken = session.getIdToken().getJwtToken();
+          accessToken = session.getAccessToken().getJwtToken();
+          CognitoContext.accessToken = accessToken;
         }
       });
       getStorageUsed();
       getFileList(fileList.currentDirectory);
       console.log(cognitoUser);
+      console.log(CognitoContext);
     } else {
       navigate("/");
     }
@@ -48,11 +51,11 @@ const Drive = () => {
       let response = await axios.post(
         "http://localhost:5001/getStorageUsed",
         {
-          username: cognitoUser.username,
+          username,
+          accessToken,
         },
         {
           headers: {
-            Authorization: authToken,
             "Content-Type": "application/json",
           },
         }
@@ -68,12 +71,12 @@ const Drive = () => {
       let response = await axios.post(
         "http://localhost:5001/getFileList",
         {
-          username: cognitoUser.username,
+          username,
+          accessToken,
           path,
         },
         {
           headers: {
-            Authorization: authToken,
             "Content-Type": "application/json",
           },
         }

@@ -1,29 +1,12 @@
-import React, { useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useContext } from "react";
 import CognitoCtx from "../context/CognitoCtx";
 
 const FileDisplay = (props) => {
-  const navigate = useNavigate();
   const CognitoContext = useContext(CognitoCtx);
 
-  let authToken;
+  let accessToken = CognitoContext.accessToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
-
-  useEffect(() => {
-    if (cognitoUser) {
-      cognitoUser.getSession(function sessionCallback(err, session) {
-        if (err) {
-          navigate("/signin");
-        } else if (!session.isValid()) {
-          navigate("/signin");
-        } else {
-          authToken = session.getIdToken().getJwtToken();
-        }
-      });
-    } else {
-      navigate("/");
-    }
-  }, []);
+  let username = cognitoUser.username;
 
   let file = props.file;
   let arraySplit = file.Key.split("/");
@@ -50,8 +33,9 @@ const FileDisplay = (props) => {
       method: "POST",
       headers: myHeaders,
       body: JSON.stringify({
-        username: cognitoUser.username,
+        username,
         Key: file.Key,
+        accessToken,
       }),
       redirect: "follow",
     };
@@ -75,6 +59,8 @@ const FileDisplay = (props) => {
 
     var raw = JSON.stringify({
       filename: file.Key,
+      username,
+      accessToken,
     });
 
     var requestOptions = {
