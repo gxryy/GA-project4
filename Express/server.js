@@ -1,7 +1,7 @@
+"use-strict";
 // DEPENDENCIES
 require("dotenv").config();
 const express = require("express");
-const session = require("express-session");
 var cors = require("cors");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
@@ -13,12 +13,17 @@ const {
   deleteFile,
 } = require("./s3");
 const PORT = process.env.PORT || 5001;
+const { sequelize, Users, Credits, Storage, Shares } = require("./models");
 
 // CONFIGURATION
 const app = express();
 app.use(cors());
 app.use(express.json()); //input parser for JSON
 app.use(express.urlencoded({ extended: false }));
+
+// ROUTER/CONTROLLER
+const dbTestController = require("./controller/dbTestController");
+app.use("/", dbTestController);
 
 //UNLINK (to delete files after upload)
 const fs = require("fs");
@@ -30,7 +35,6 @@ const unlinkFile = util.promisify(fs.unlink);
 
 // ROUTES
 app.post("/download", (req, res) => {
-  console.log(`in downloads`);
   const key = req.body.Key;
   const readStream = getFileStream(key);
   readStream.pipe(res);
@@ -40,7 +44,6 @@ app.post("/download", (req, res) => {
 });
 
 app.post("/upload", upload.single("file"), async (req, res) => {
-  console.log(`something came in`);
   if (req.file) {
     const file = req.file;
     let username = req.body.username;
@@ -49,7 +52,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     console.log(file.filename);
     const result = await uploadFile(file);
     await unlinkFile(file.path);
-    res.send(`ok`);
+    res.send(result);
   }
 });
 
@@ -91,13 +94,6 @@ app.post("/getStorageUsed", async (req, res) => {
   res.send({ totalSize: size, numberOfObjects: response.objectList.length });
 });
 
-app.post("/test", async (req, res) => {
-  console.log(`in test endpoint`);
-  response = await listObjects();
-
-  res.send("response");
-});
-
 app.post("/createFolder", async (req, res) => {
   username = req.body.username;
   path = req.body.path;
@@ -105,7 +101,12 @@ app.post("/createFolder", async (req, res) => {
   res.send(response);
 });
 
+// ---------- DB TESTS ----------
+
 // Listener
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`server started on port ${PORT}`);
+
+  await sequelize.authenticate();
+  console.log("Database Connected!");
 });

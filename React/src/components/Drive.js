@@ -35,6 +35,7 @@ const Drive = () => {
       });
       getStorageUsed();
       getFileList(fileList.currentDirectory);
+      console.log(cognitoUser);
     } else {
       navigate("/");
     }
