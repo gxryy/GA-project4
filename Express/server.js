@@ -6,6 +6,7 @@ const cors = require("cors");
 const request = require("request");
 const multer = require("multer");
 const jwt_decode = require("jwt-decode");
+const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 const upload = multer({ dest: "uploads/" });
 const {
@@ -55,7 +56,7 @@ const checkJWTMiddleware = (req, res, next) => {
   const invalidResponse = () => {
     res.sendStatus(404);
   };
-  const ignored_routes = ["/random-url", "/test"];
+  const ignored_routes = ["/register", "/test"];
   if (ignored_routes.includes(req.path)) {
     next();
   } else {
@@ -89,9 +90,77 @@ const checkJWTMiddleware = (req, res, next) => {
   }
 };
 
+// MIDDLEWARE
 app.use(checkJWTMiddleware);
 
 // ROUTES
+
+app.post("/register", (req, res) => {
+  console.log(`in register ep`);
+
+  let email = req.body.email;
+  let firstName = req.body.firstName;
+  let lastName = req.body.lastName;
+  let password = req.body.password;
+
+  let userPool = new AmazonCognitoIdentity.CognitoUserPool({
+    UserPoolId: process.env.AWS_COGNITO_USERPOOLID,
+    ClientId: process.env.AWS_COGNITO_USERPOOLCLIENTID,
+  });
+
+  let attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute({
+    Name: "email",
+    Value: email,
+  });
+
+  let attributeFirstName = new AmazonCognitoIdentity.CognitoUserAttribute({
+    Name: "given_name",
+    Value: firstName,
+  });
+
+  let attributeLastName = new AmazonCognitoIdentity.CognitoUserAttribute({
+    Name: "family_name",
+    Value: lastName,
+  });
+
+  userPool.signUp(
+    email,
+    password,
+    [attributeEmail, attributeFirstName, attributeLastName],
+    null,
+    async function signUpCallback(err, result) {
+      if (!err) {
+        let username = result.userSub;
+        try {
+          const userResponse = await Users.create({
+            username,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            date_joined: Date.now(),
+          });
+
+          const creditResponse = await Credits.create({
+            username,
+            credit_adjustment: 1000,
+            date: Date.now(),
+            adjustment_type: "initial credits",
+          });
+
+          res.sendStatus(200);
+        } catch (err) {
+          console.log(err);
+          res.sendStatus(500);
+        }
+      } else {
+        console.log(`registration failure`);
+        console.log(err);
+        res.sendStatus(500);
+      }
+    }
+  );
+});
+
 app.post("/download", (req, res) => {
   const key = req.body.Key;
   const readStream = getFileStream(key);

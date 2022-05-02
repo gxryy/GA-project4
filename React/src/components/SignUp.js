@@ -17,70 +17,35 @@ const SignUp = () => {
     let password = event.target.passwordInputRegister.value;
     let password2 = event.target.password2InputRegister.value;
 
-    var onSuccess = function registerSuccess(result) {
-      console.log(result);
-      var cognitoUser = result.user;
-      // console.log("user name is " + cognitoUser.getUsername());
-      var confirmation =
-        "Registration successful. Please check your email inbox or spam folder for your verification code.";
-      if (confirmation) {
-        alert(confirmation);
-        navigate("/verify", { state: { email } });
-      }
-    };
-    var onFailure = function registerFailure(err) {
-      console.log(`registration failure`);
-      console.log(err);
-      //   alert(err);
-    };
-
     if (password === password2) {
-      let attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute({
-        Name: "email",
-        Value: email,
+      let myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+
+      var raw = JSON.stringify({
+        email,
+        firstName,
+        lastName,
+        password,
       });
 
-      let attributeFirstName = new AmazonCognitoIdentity.CognitoUserAttribute({
-        Name: "given_name",
-        Value: firstName,
-      });
+      var requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+      };
 
-      let attributeLastName = new AmazonCognitoIdentity.CognitoUserAttribute({
-        Name: "family_name",
-        Value: lastName,
-      });
-
-      register(email, password, onSuccess, onFailure, [
-        attributeEmail,
-        attributeFirstName,
-        attributeLastName,
-      ]);
+      fetch("http://localhost:5001/register", requestOptions)
+        .then((response) => {
+          response.status == 200
+            ? navigate("/verify", { state: { email } })
+            : alert("Signup failed. Please try again..");
+        })
+        .catch((error) => alert(error));
     } else {
       alert("Passwords do not match");
     }
   };
-
-  function register(email, password, onSuccess, onFailure, attributeList) {
-    console.log(`email is ${email}`);
-    console.log(`password is ${password}`);
-    console.log(attributeList);
-
-    CognitoContext.userPool.signUp(
-      email,
-      password,
-      attributeList,
-      null,
-      function signUpCallback(err, result) {
-        if (!err) {
-          onSuccess(result);
-        } else {
-          onFailure(err);
-        }
-      }
-    );
-
-    // onSuccess(signUpSuccess);
-  }
 
   return (
     <div>
