@@ -39,7 +39,6 @@ export default function App() {
         <a href="/drive"> Drive </a>
         <a href="/servertest"> Server Test </a>
         <a href="/download">Public Download </a>
-        <a href="/shareManager">Share Manager </a>
 
         <CognitoCtx.Provider value={{ userPool }}>
           <Routes>

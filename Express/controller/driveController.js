@@ -43,6 +43,7 @@ const checkJWTMiddleware = (req, res, next) => {
     console.log(`JWT token validator`);
     token = req.body.accessToken;
     username = req.body.username;
+    console.log(req.body);
     try {
       // decoding JWT
       let payload = jwt_decode(token);
@@ -160,7 +161,7 @@ drive.post("/getStorageUsed", async (req, res) => {
   res.send({ totalSize: size, numberOfObjects: response.objectList.length });
 });
 
-drive.post("/getsharedfile", async (req, res) => {
+drive.post("/getallsharedlink", async (req, res) => {
   console.log(`in all links `);
   let username = req.body.username;
   let linkArray = [];
@@ -176,7 +177,7 @@ drive.post("/getsharedfile", async (req, res) => {
       linkArray.push({
         fileName,
         url_uuid: link.url_uuid,
-        exipry: link.expiry,
+        expiry: link.expiry,
         download_counter: link.download_counter,
         createdAt: link.createdAt,
       });

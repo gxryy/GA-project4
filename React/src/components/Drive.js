@@ -109,6 +109,11 @@ const Drive = () => {
       <ExplorerCtx.Provider value={{ fileList, setFileList }}>
         <FileExplorer />
       </ExplorerCtx.Provider>
+      <input
+        type="button"
+        value="manage"
+        onClick={() => navigate("/shareManager")}
+      ></input>
     </div>
   );
 };

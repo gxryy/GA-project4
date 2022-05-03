@@ -31,6 +31,7 @@ const SignIn = () => {
         console.log(`successful login`);
         console.log(result);
         var accessToken = result.getAccessToken().getJwtToken();
+        CognitoContext.accessToken = accessToken;
         console.log(`accessToken is ${accessToken}`);
         navigate("/drive");
       },
