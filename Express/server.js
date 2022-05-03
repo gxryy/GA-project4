@@ -7,7 +7,7 @@ const request = require("request");
 const { Op } = require("sequelize");
 const fs = require("fs");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
-const { getFileStream } = require("./s3");
+const { getFileStream, listObjects } = require("./s3");
 const { sequelize, Users, Credits, Storage, Shares } = require("./models");
 const PORT = process.env.PORT || 5001;
 
@@ -34,6 +34,28 @@ app.use(express.urlencoded({ extended: false }));
     });
   });
 })();
+
+const average = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+
+const getUsage = async (username, year, month) => {
+  let firstDay = new Date(year, month - 1, 1);
+  let lastDay = new Date(year, month, 0);
+
+  try {
+    const response = await Storage.findAll({
+      attributes: ["date", "storage_used"],
+      where: {
+        [Op.and]: [
+          { username },
+          { date: { [Op.between]: [firstDay, lastDay] } },
+        ],
+      },
+    });
+    return response;
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 // ROUTER/CONTROLLER
 const dbTestController = require("./controller/dbTestController");
@@ -157,8 +179,64 @@ app.post("/publicdownload", async (req, res) => {
 app.get("/test", async (req, res) => {
   console.log(`in test endpoint`);
   // console.log(req.body);
+});
 
-  res.send("ok");
+app.get("/logstorageused", async (req, res) => {
+  try {
+    const allUsers = await Users.findAll({ attributes: ["username"] });
+
+    const getStorage = async (username) => {
+      params = {
+        Prefix: username + "/",
+        Delimiter: "",
+        MaxKeys: 1000,
+      };
+      let size = 0;
+
+      let response = await listObjects(params);
+      response.objectList.forEach((object) => {
+        size += object.Size;
+      });
+      return size;
+    };
+    let createCounter = 0;
+    let updateCounter = 0;
+    for await (let user of allUsers) {
+      let storage_used = await getStorage(user.username);
+
+      const existingLog = await Storage.findOne({
+        where: {
+          username: user.username,
+          date: Date.now(),
+        },
+      });
+      if (existingLog) {
+        await existingLog.update({ storage_used });
+        updateCounter++;
+      } else {
+        const response = await Storage.create({
+          username: user.username,
+          date: Date.now(),
+          storage_used,
+        });
+        createCounter++;
+      }
+    }
+    res.json(`Created : ${createCounter} Updated: ${updateCounter}`);
+  } catch (err) {
+    console.log(err);
+    res.status(500);
+  }
+});
+
+app.get("/getmonth", async (req, res) => {
+  let response = await getUsage(
+    "14a8ab05-1be6-4b17-b8fc-78bda2dc89f1",
+    2022,
+    05
+  );
+  console.log(response);
+  res.json(response);
 });
 
 // Listener

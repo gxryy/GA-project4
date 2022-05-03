@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       username: { type: DataTypes.STRING(38), allowNull: false },
       date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
