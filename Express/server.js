@@ -92,7 +92,7 @@ app.post("/register", (req, res) => {
             username,
             credit_adjustment: 1000,
             date: Date.now(),
-            adjustment_type: "initial credits",
+            adjustment_type: "Initial Credits",
           });
 
           res.sendStatus(200);

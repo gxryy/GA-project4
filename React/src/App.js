@@ -10,6 +10,7 @@ import Home from "./components/Home";
 import Test from "./components/Test";
 import Drive from "./components/Drive";
 import ShareManager from "./components/ShareManager";
+import CreditHistory from "./components/CreditHistory";
 import SharedDownload from "./components/SharedDownload";
 import ServerTest from "./components/ServerTest";
 
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/verify" element={<Verify />}></Route>
             <Route path="/test" element={<Test />}></Route>
             <Route path="/drive" element={<Drive />}></Route>
+            <Route path="/credithistory" element={<CreditHistory />}></Route>
             <Route path="/shareManager" element={<ShareManager />}></Route>
             <Route
               path="/download/:url_uuid"

@@ -230,4 +230,53 @@ drive.delete("/deletelink", async (req, res) => {
   }
 });
 
+drive.post("/getcredithistory", async (req, res) => {
+  let username = req.body.username;
+
+  try {
+    const response = await Credits.findAll({
+      where: { username },
+    });
+    console.log(response);
+    res.json(response);
+  } catch (err) {
+    console.log(err);
+    return res.status(500);
+  }
+});
+
+drive.post("/getcredits", async (req, res) => {
+  let username = req.body.username;
+
+  try {
+    const response = await Credits.findAll({
+      where: { username },
+    });
+    let credits = 0;
+    // console.log(response);
+    for (transaction of response) {
+      credits += transaction.credit_adjustment;
+    }
+    res.json(credits);
+  } catch (err) {
+    console.log(err);
+    return res.status(500);
+  }
+});
+
+drive.post("/topup", async (req, res) => {
+  try {
+    const response = await Credits.create({
+      username: req.body.username,
+      credit_adjustment: req.body.credit_adjustment,
+      date: Date.now(),
+      adjustment_type: "Top Up",
+    });
+    res.json(response);
+  } catch (err) {
+    console.log(err);
+    return res.status(500);
+  }
+});
+
 module.exports = drive;

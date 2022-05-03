@@ -13,6 +13,7 @@ const Drive = () => {
     totalSize: 0,
     numberOfObjects: 0,
   });
+  const [credits, setCredits] = useState(0);
   const [fileList, setFileList] = useState({
     objectList: [],
     folderList: [],
@@ -36,6 +37,7 @@ const Drive = () => {
         }
       });
       getStorageUsed();
+      getCreditsRemaining();
       getFileList(fileList.currentDirectory);
       console.log(cognitoUser);
       console.log(CognitoContext);
@@ -64,6 +66,26 @@ const Drive = () => {
     } catch (err) {
       throw new Error(err);
     }
+  };
+
+  const getCreditsRemaining = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: JSON.stringify({
+        username,
+        accessToken,
+      }),
+      redirect: "follow",
+    };
+
+    fetch("http://localhost:5001/drive/getcredits", requestOptions)
+      .then((response) => response.text())
+      .then((result) => setCredits(result))
+      .catch((error) => console.log("error", error));
   };
 
   const getFileList = async (path) => {
@@ -104,7 +126,10 @@ const Drive = () => {
       <h4>Drive component</h4>
       {/* <p>The auth token {authToken}</p> */}
 
-      <h2>Total Storage Used: {toReadable(storageUsed.totalSize)}</h2>
+      <h4>Total Storage Used: {toReadable(storageUsed.totalSize)}</h4>
+      <h4 onClick={() => navigate("/credithistory")}>
+        Credits remaining: {credits}
+      </h4>
 
       <ExplorerCtx.Provider value={{ fileList, setFileList }}>
         <FileExplorer />
