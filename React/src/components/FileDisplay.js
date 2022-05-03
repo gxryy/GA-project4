@@ -76,10 +76,37 @@ const FileDisplay = (props) => {
       .catch((error) => console.log("error", error));
   };
 
+  const shareHandler = async () => {
+    console.log(file.Key);
+
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      username,
+      s3_key: file.Key,
+      expiry: "2022-10-10 10:30:00+08:00",
+      accessToken,
+    });
+
+    var requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("http://localhost:5001/getsharelink", requestOptions)
+      .then((response) => response.text())
+      .then((result) => console.log(result))
+      .catch((error) => console.log("error", error));
+  };
+
   return (
     <div>
       <p onClick={clickHandler}>{fileName}</p>{" "}
       <input type="button" value="delete" onClick={deleteHandler}></input>
+      <input type="button" value="share" onClick={shareHandler}></input>
       {toReadable(file.Size)} {file.LastModified}
       <hr />
     </div>

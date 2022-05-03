@@ -9,6 +9,7 @@ import Verify from "./components/Verify";
 import Home from "./components/Home";
 import Test from "./components/Test";
 import Drive from "./components/Drive";
+import SharedDownload from "./components/SharedDownload";
 import ServerTest from "./components/ServerTest";
 import "./dependencies/config";
 import FolderDisplay from "./components/FolderDisplay";
@@ -35,6 +36,7 @@ export default function App() {
         <a href="/test"> Test </a>
         <a href="/drive"> Drive </a>
         <a href="/servertest"> Server Test </a>
+        <a href="/download">Public Download </a>
 
         <CognitoCtx.Provider value={{ userPool }}>
           <Routes>
@@ -45,6 +47,10 @@ export default function App() {
             <Route path="/verify" element={<Verify />}></Route>
             <Route path="/test" element={<Test />}></Route>
             <Route path="/drive" element={<Drive />}></Route>
+            <Route
+              path="/download/:url_uuid"
+              element={<SharedDownload />}
+            ></Route>
             <Route path="/servertest" element={<ServerTest />}></Route>
           </Routes>
         </CognitoCtx.Provider>

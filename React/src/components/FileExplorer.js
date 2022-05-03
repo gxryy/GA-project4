@@ -59,7 +59,6 @@ const FileExplorer = () => {
             formData,
             {
               headers: {
-                Authorization: accessToken,
                 "Content-Type": "multipart/form-data",
               },
             }

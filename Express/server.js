@@ -6,6 +6,8 @@ const cors = require("cors");
 const request = require("request");
 const multer = require("multer");
 const jwt_decode = require("jwt-decode");
+const { Op } = require("sequelize");
+const { nanoid } = require("nanoid");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 const upload = multer({ dest: "uploads/" });
@@ -32,7 +34,6 @@ app.use("/", dbTestController);
 //UNLINK (to delete files after upload)
 const fs = require("fs");
 const util = require("util");
-const { response } = require("express");
 const unlinkFile = util.promisify(fs.unlink);
 
 // VARIABLES
@@ -56,7 +57,13 @@ const checkJWTMiddleware = (req, res, next) => {
   const invalidResponse = () => {
     res.sendStatus(404);
   };
-  const ignored_routes = ["/register", "/test"];
+  const ignored_routes = [
+    "/register",
+    "/test",
+    "/publicdownload",
+    "/publicfiledetails",
+    "/upload",
+  ];
   if (ignored_routes.includes(req.path)) {
     next();
   } else {
@@ -82,6 +89,7 @@ const checkJWTMiddleware = (req, res, next) => {
       // Validing token not expired
       if (Math.floor(Date.now() / 1000) > payload.exp) invalidResponse();
       // console.log(`token not expired`);
+      console.log(`passed`);
       next();
     } catch (err) {
       console.log(err);
@@ -170,7 +178,53 @@ app.post("/download", (req, res) => {
   // res.sendFile(`${__dirname}/test_200.mp4`);
 });
 
+app.post("/publicfiledetails", async (req, res) => {
+  console.log(`in pub file details`);
+  let url_uuid = req.body.url_uuid;
+  try {
+    const share = await Shares.findOne({
+      where: { [Op.and]: [{ url_uuid }, { is_deleted: false }] },
+    });
+    let s3_key = share.dataValues.s3_key;
+    let arraySplit = s3_key.split("/");
+    let fileName = arraySplit[arraySplit.length - 1];
+    res.send(fileName);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(400);
+  }
+});
+
+app.post("/publicdownload", async (req, res) => {
+  console.log(`in public download`);
+  let url_uuid = req.body.url_uuid;
+  // expect to receive the url_uuid
+  try {
+    const share = await Shares.findOne({
+      where: { [Op.and]: [{ url_uuid }, { is_deleted: false }] },
+    });
+    let shareDetails = share?.dataValues;
+    console.log(shareDetails);
+    let expiry = shareDetails.expiry;
+    let now = new Date();
+    if (expiry > now) {
+      values = { download_counter: share.download_counter + 1 };
+      const response = await share.update(values);
+      const key = shareDetails.s3_key;
+      const readStream = getFileStream(key);
+      readStream.pipe(res);
+    } else {
+      res.sendStatus(400);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  // check for expiry before sending file
+});
+
 app.post("/upload", upload.single("file"), async (req, res) => {
+  console.log(req);
   if (req.file) {
     const file = req.file;
     let username = req.body.username;
@@ -180,6 +234,28 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     const result = await uploadFile(file);
     await unlinkFile(file.path);
     res.send(result);
+  }
+});
+
+app.post("/getsharelink", async (req, res) => {
+  console.log(`in get sharelink`);
+  let url_uuid = nanoid();
+  console.log(req.body);
+
+  try {
+    const response = await Shares.create({
+      username: req.body.username,
+      url_uuid: url_uuid,
+      s3_key: req.body.s3_key,
+      expiry: req.body.expiry,
+      download_counter: 0,
+      is_deleted: false,
+    });
+
+    res.json({ url_uuid, expiry: response.dataValues.expiry });
+  } catch (err) {
+    console.log(err);
+    res.status(500);
   }
 });
 

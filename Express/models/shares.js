@@ -19,6 +19,11 @@ module.exports = (sequelize, DataTypes) => {
       s3_key: { type: DataTypes.STRING(1023), allowNull: false },
       expiry: { type: DataTypes.DATE, allowNull: false },
       download_counter: { type: DataTypes.INTEGER, allowNull: false },
+      is_deleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       sequelize,

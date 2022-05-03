@@ -9,24 +9,9 @@ const FolderDisplay = (props) => {
   const CognitoContext = useContext(CognitoCtx);
   const navigate = useNavigate();
   let folder = props.folder;
-  let authToken;
   let cognitoUser = CognitoContext.userPool.getCurrentUser();
-
-  useEffect(() => {
-    if (cognitoUser) {
-      cognitoUser.getSession(function sessionCallback(err, session) {
-        if (err) {
-          navigate("/signin");
-        } else if (!session.isValid()) {
-          navigate("/signin");
-        } else {
-          authToken = session.getIdToken().getJwtToken();
-        }
-      });
-    } else {
-      navigate("/");
-    }
-  }, []);
+  let username = cognitoUser.username;
+  let accessToken = CognitoContext.accessToken;
 
   const clickHandler = (event) => {
     let folder = event.target.innerText;
@@ -43,12 +28,12 @@ const FolderDisplay = (props) => {
       let response = await axios.post(
         "http://localhost:5001/getFileList",
         {
-          username: cognitoUser.username,
+          username,
+          accessToken,
           path,
         },
         {
           headers: {
-            Authorization: authToken,
             "Content-Type": "application/json",
           },
         }
