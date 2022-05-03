@@ -26,7 +26,7 @@ const FolderDisplay = (props) => {
     // Common Function from drive component
     try {
       let response = await axios.post(
-        "http://localhost:5001/getFileList",
+        "http://localhost:5001/drive/getFileList",
         {
           username,
           accessToken,

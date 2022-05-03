@@ -34,7 +34,7 @@ const FileExplorer = () => {
       redirect: "follow",
     };
 
-    fetch("http://localhost:5001/createFolder", requestOptions)
+    fetch("http://localhost:5001/drive/createFolder", requestOptions)
       .then((response) => {
         if (response.ok) {
           console.log(`folder created`);
@@ -55,7 +55,7 @@ const FileExplorer = () => {
         formData.append("accessToken", accessToken);
         try {
           const result = await axios.post(
-            "http://localhost:5001/upload",
+            "http://localhost:5001/drive/upload",
             formData,
             {
               headers: {

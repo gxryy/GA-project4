@@ -1,25 +1,15 @@
 "use-strict";
-// DEPENDENCIES
+// IMPORTS
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const request = require("request");
-const multer = require("multer");
-const jwt_decode = require("jwt-decode");
 const { Op } = require("sequelize");
-const { nanoid } = require("nanoid");
+const fs = require("fs");
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
-
-const upload = multer({ dest: "uploads/" });
-const {
-  uploadFile,
-  getFileStream,
-  listObjects,
-  createFolder,
-  deleteFile,
-} = require("./s3");
-const PORT = process.env.PORT || 5001;
+const { getFileStream } = require("./s3");
 const { sequelize, Users, Credits, Storage, Shares } = require("./models");
+const PORT = process.env.PORT || 5001;
 
 // CONFIGURATION
 const app = express();
@@ -27,21 +17,9 @@ app.use(cors());
 app.use(express.json()); //input parser for JSON
 app.use(express.urlencoded({ extended: false }));
 
-// ROUTER/CONTROLLER
-const dbTestController = require("./controller/dbTestController");
-app.use("/", dbTestController);
-
-//UNLINK (to delete files after upload)
-const fs = require("fs");
-const util = require("util");
-const unlinkFile = util.promisify(fs.unlink);
-
-// VARIABLES
-let JWKs = [];
-
 // FUNCTIONS
-
-const fetchJWKs = () => {
+// Main function wrapped and executed onload
+(() => {
   let options = {
     method: "GET",
     url: `https://cognito-idp.${process.env.AWS_COGNITO_REGION}.amazonaws.com/${process.env.AWS_COGNITO_USERPOOLID}/.well-known/jwks.json`,
@@ -49,57 +27,19 @@ const fetchJWKs = () => {
   };
   request(options, (error, response) => {
     if (error) throw new Error(error);
-    JWKs = JSON.parse(response.body);
+    fs.writeFile("JWKs.txt", response.body, function (err) {
+      if (err) {
+        console.log(err);
+      }
+    });
   });
-};
+})();
 
-const checkJWTMiddleware = (req, res, next) => {
-  const invalidResponse = () => {
-    res.sendStatus(404);
-  };
-  const ignored_routes = [
-    "/register",
-    "/test",
-    "/publicdownload",
-    "/publicfiledetails",
-    "/upload",
-  ];
-  if (ignored_routes.includes(req.path)) {
-    next();
-  } else {
-    console.log(`JWT token validator`);
-    token = req.body.accessToken;
-    username = req.body.username;
-    try {
-      // decoding JWT
-      let payload = jwt_decode(token);
-      // validating kid with jwks
-      let { kid, alg } = jwt_decode(token, { header: true });
-      let validkid = false;
-      JWKs.keys.map((key) => {
-        if (!validkid) {
-          key.kid === kid ? (validkid = true) : (validkid = false);
-        }
-      });
-      if (!validkid) invalidResponse();
-      // console.log(`kid valid`);
-      // Validing username claim
-      if (payload.username !== username) invalidResponse();
-      // console.log(`username claim valid`);
-      // Validing token not expired
-      if (Math.floor(Date.now() / 1000) > payload.exp) invalidResponse();
-      // console.log(`token not expired`);
-      console.log(`passed`);
-      next();
-    } catch (err) {
-      console.log(err);
-      invalidResponse();
-    }
-  }
-};
-
-// MIDDLEWARE
-app.use(checkJWTMiddleware);
+// ROUTER/CONTROLLER
+const dbTestController = require("./controller/dbTestController");
+app.use("/", dbTestController);
+const driveController = require("./controller/driveController");
+app.use("/drive/", driveController);
 
 // ROUTES
 
@@ -169,15 +109,6 @@ app.post("/register", (req, res) => {
   );
 });
 
-app.post("/download", (req, res) => {
-  const key = req.body.Key;
-  const readStream = getFileStream(key);
-  readStream.pipe(res);
-
-  // ---EXPERIMENT---
-  // res.sendFile(`${__dirname}/test_200.mp4`);
-});
-
 app.post("/publicfiledetails", async (req, res) => {
   console.log(`in pub file details`);
   let url_uuid = req.body.url_uuid;
@@ -223,87 +154,6 @@ app.post("/publicdownload", async (req, res) => {
   // check for expiry before sending file
 });
 
-app.post("/upload", upload.single("file"), async (req, res) => {
-  console.log(req);
-  if (req.file) {
-    const file = req.file;
-    let username = req.body.username;
-    let path = req.body.path;
-    file.filename = username + path + file.originalname;
-    console.log(file.filename);
-    const result = await uploadFile(file);
-    await unlinkFile(file.path);
-    res.send(result);
-  }
-});
-
-app.post("/getsharelink", async (req, res) => {
-  console.log(`in get sharelink`);
-  let url_uuid = nanoid();
-  console.log(req.body);
-
-  try {
-    const response = await Shares.create({
-      username: req.body.username,
-      url_uuid: url_uuid,
-      s3_key: req.body.s3_key,
-      expiry: req.body.expiry,
-      download_counter: 0,
-      is_deleted: false,
-    });
-
-    res.json({ url_uuid, expiry: response.dataValues.expiry });
-  } catch (err) {
-    console.log(err);
-    res.status(500);
-  }
-});
-
-app.delete("/delete", async (req, res) => {
-  console.log(`deleting`);
-  filename = req.body.filename;
-  let response = await deleteFile(filename);
-  res.send(response);
-});
-
-app.post("/getFileList", async (req, res) => {
-  username = req.body.username;
-  path = req.body.path;
-  params = {
-    Prefix: username + path,
-    Delimiter: "/",
-    MaxKeys: 1000,
-  };
-
-  let response = await listObjects(params);
-  response = { ...response, currentDirectory: path };
-
-  res.send(response);
-});
-
-app.post("/getStorageUsed", async (req, res) => {
-  username = req.body.username;
-  params = {
-    Prefix: username + "/",
-    Delimiter: "",
-    MaxKeys: 1000,
-  };
-  let size = 0;
-  let response = await listObjects(params);
-  response.objectList.forEach((object) => {
-    size += object.Size;
-  });
-
-  res.send({ totalSize: size, numberOfObjects: response.objectList.length });
-});
-
-app.post("/createFolder", async (req, res) => {
-  username = req.body.username;
-  path = req.body.path;
-  let response = await createFolder(username + path);
-  res.send(response);
-});
-
 app.get("/test", async (req, res) => {
   console.log(`in test endpoint`);
   // console.log(req.body);
@@ -314,8 +164,6 @@ app.get("/test", async (req, res) => {
 // Listener
 app.listen(PORT, async () => {
   console.log(`Starting Server...`);
-  console.log(`fetching JWKs`);
-  fetchJWKs();
   await sequelize.authenticate();
   console.log("Database Connected!");
   console.log(`Server started on port ${PORT}`);

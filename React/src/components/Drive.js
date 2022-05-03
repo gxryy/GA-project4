@@ -49,7 +49,7 @@ const Drive = () => {
   const getStorageUsed = async () => {
     try {
       let response = await axios.post(
-        "http://localhost:5001/getStorageUsed",
+        "http://localhost:5001/drive/getStorageUsed",
         {
           username,
           accessToken,
@@ -69,7 +69,7 @@ const Drive = () => {
   const getFileList = async (path) => {
     try {
       let response = await axios.post(
-        "http://localhost:5001/getFileList",
+        "http://localhost:5001/drive/getFileList",
         {
           username,
           accessToken,

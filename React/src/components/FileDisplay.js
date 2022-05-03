@@ -40,7 +40,7 @@ const FileDisplay = (props) => {
       redirect: "follow",
     };
 
-    fetch("http://127.0.0.1:5001/download", requestOptions)
+    fetch("http://127.0.0.1:5001/drive/download", requestOptions)
       .then((response) => {
         return response.blob();
       })
@@ -70,7 +70,7 @@ const FileDisplay = (props) => {
       redirect: "follow",
     };
 
-    fetch("http://127.0.0.1:5001/delete", requestOptions)
+    fetch("http://127.0.0.1:5001/drive/delete", requestOptions)
       .then((response) => response.text())
       .then((result) => console.log(result))
       .catch((error) => console.log("error", error));
@@ -96,7 +96,7 @@ const FileDisplay = (props) => {
       redirect: "follow",
     };
 
-    fetch("http://localhost:5001/getsharelink", requestOptions)
+    fetch("http://localhost:5001/drive/getsharelink", requestOptions)
       .then((response) => response.text())
       .then((result) => console.log(result))
       .catch((error) => console.log("error", error));
