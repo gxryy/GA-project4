@@ -160,4 +160,73 @@ drive.post("/getStorageUsed", async (req, res) => {
   res.send({ totalSize: size, numberOfObjects: response.objectList.length });
 });
 
+drive.post("/getsharedfile", async (req, res) => {
+  console.log(`in all links `);
+  let username = req.body.username;
+  let linkArray = [];
+  try {
+    const response = await Shares.findAll({
+      where: { [Op.and]: [{ username }, { is_deleted: false }] },
+    });
+
+    for (let link of response) {
+      console.log(`in a link`);
+      let arraySplit = link.s3_key.split("/");
+      let fileName = arraySplit[arraySplit.length - 1];
+      linkArray.push({
+        fileName,
+        url_uuid: link.url_uuid,
+        exipry: link.expiry,
+        download_counter: link.download_counter,
+        createdAt: link.createdAt,
+      });
+    }
+
+    console.log(linkArray);
+
+    res.json(linkArray);
+  } catch (err) {
+    // console.log(err);
+    console.log(`error`);
+    // return res.status(500);
+  }
+
+  //   res.send("ok");
+});
+
+drive.post("/editlinkexpiry", async (req, res) => {
+  try {
+    const link = await Shares.findOne({
+      where: { url_uuid: req.body.url_uuid },
+    });
+
+    values = { expiry: req.body.newExpiry };
+
+    link.update(values);
+
+    return res.json("updated");
+  } catch (err) {
+    console.log(err);
+    return res.status(500);
+  }
+});
+
+drive.delete("/deletelink", async (req, res) => {
+  // to update links isDeleted field
+  try {
+    const link = await Shares.findOne({
+      where: { url_uuid: req.body.url_uuid },
+    });
+
+    values = { is_deleted: true };
+
+    link.update(values);
+
+    return res.json("deleted");
+  } catch (err) {
+    console.log(err);
+    return res.status(500);
+  }
+});
+
 module.exports = drive;

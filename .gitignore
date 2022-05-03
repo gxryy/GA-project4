@@ -104,3 +104,4 @@ dist
 .tern-port
 .DS_Store
 Express/config/config.json
+Express/notes.txt
