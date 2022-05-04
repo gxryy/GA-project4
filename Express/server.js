@@ -51,10 +51,20 @@ const getUsage = async (username, year, month) => {
         ],
       },
     });
-    return response;
+
+    let averageUsage = average(
+      response.map((entry) => parseInt(entry.storage_used))
+    );
+
+    return { averageUsage, details: response };
   } catch (err) {
     console.log(err);
   }
+};
+
+const getCost = (average) => {
+  const costPer100GB = 250;
+  return Math.floor((average / 10 ** 11) * costPer100GB * 100) / 100;
 };
 
 // ROUTER/CONTROLLER
@@ -229,14 +239,40 @@ app.get("/logstorageused", async (req, res) => {
   }
 });
 
-app.get("/getmonth", async (req, res) => {
+app.get("/getMonthUsage", async (req, res) => {
   let response = await getUsage(
-    "14a8ab05-1be6-4b17-b8fc-78bda2dc89f1",
-    2022,
-    05
+    req.body.username,
+    req.body.year,
+    req.body.month
   );
-  console.log(response);
+
   res.json(response);
+});
+
+app.get("/postBill", async (req, res) => {
+  try {
+    const allUsers = await Users.findAll({ attributes: ["username"] });
+
+    for await (let user of allUsers) {
+      let usage = await getUsage(user.username, req.body.year, req.body.month);
+      let cost = getCost(usage.averageUsage);
+      console.log(`average usage is ${usage.averageUsage / 10 ** 9} GB`);
+      console.log(`cost is ${cost}`);
+      if (cost) {
+        const response = await Credits.create({
+          username: user.username,
+          credit_adjustment: -parseInt(cost),
+          date: Date.now(),
+          adjustment_type: "Monthly Bill",
+          bill_month: `${req.body.year}-${req.body.month}`,
+        });
+      }
+    }
+    res.json(`Bills Posted `);
+  } catch (err) {
+    console.log(err);
+    res.status(500);
+  }
 });
 
 // Listener
