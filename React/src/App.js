@@ -1,17 +1,12 @@
 import React, { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import CognitoCtx from "./context/CognitoCtx";
-import ExplorerCtx from "./context/ExplorerCtx";
-import SignUp from "./components/SignUp";
-import SignIn from "./components/SignIn";
-import Signout from "./components/Signout";
-import Verify from "./components/Verify";
 import Home from "./components/Home";
-import Test from "./components/Test";
 import Drive from "./components/Drive";
 import ShareManager from "./components/ShareManager";
 import CreditHistory from "./components/CreditHistory";
 import SharedDownload from "./components/SharedDownload";
+import NavBar from "./components/NavBar";
 import ServerTest from "./components/ServerTest";
 
 import "./dependencies/config";
@@ -42,13 +37,9 @@ export default function App() {
         <a href="/download">Public Download </a>
 
         <CognitoCtx.Provider value={{ userPool }}>
+          <NavBar></NavBar>
           <Routes>
             <Route path="/" element={<Home />}></Route>
-            <Route path="/signup" element={<SignUp />}></Route>
-            <Route path="/signin" element={<SignIn />}></Route>
-            <Route path="/signout" element={<Signout />}></Route>
-            <Route path="/verify" element={<Verify />}></Route>
-            <Route path="/test" element={<Test />}></Route>
             <Route path="/drive" element={<Drive />}></Route>
             <Route path="/credithistory" element={<CreditHistory />}></Route>
             <Route path="/shareManager" element={<ShareManager />}></Route>

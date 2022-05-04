@@ -135,7 +135,10 @@ app.post("/register", (req, res) => {
       } else {
         console.log(`registration failure`);
         console.log(err);
-        res.sendStatus(500);
+        if (err.code == "UsernameExistsException") res.sendStatus(201);
+        else {
+          res.sendStatus(500);
+        }
       }
     }
   );
