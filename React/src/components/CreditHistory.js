@@ -17,9 +17,9 @@ const CreditHistory = () => {
     if (cognitoUser) {
       cognitoUser.getSession(function sessionCallback(err, session) {
         if (err) {
-          navigate("/signin");
+          navigate("/");
         } else if (!session.isValid()) {
-          navigate("/signin");
+          navigate("/");
         } else {
           accessToken = session.getAccessToken().getJwtToken();
           CognitoContext.accessToken = accessToken;
@@ -78,7 +78,7 @@ const CreditHistory = () => {
 
   return (
     <>
-      <div>
+      <div className="w-10/12 mx-auto">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
@@ -107,7 +107,7 @@ const CreditHistory = () => {
                     className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
                   >
                     <div className=" flex flex-col">
-                      <p className="text-lg my-2 mb-1">{Date(credit.date)}</p>
+                      <p className="text-lg my-2 mb-1">{`${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`}</p>
                     </div>
                   </th>
 

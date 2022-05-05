@@ -242,7 +242,7 @@ app.get("/logstorageused", async (req, res) => {
   }
 });
 
-app.get("/getMonthUsage", async (req, res) => {
+app.post("/getMonthUsage", async (req, res) => {
   let response = await getUsage(
     req.body.username,
     req.body.year,

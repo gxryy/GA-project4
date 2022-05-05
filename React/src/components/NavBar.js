@@ -18,7 +18,7 @@ const NavBar = () => {
     { name: "Home", path: "/", action: function () {} },
     { name: "Drive", path: "/drive", action: function () {} },
     { name: "Shared Links", path: "/shareManager", action: function () {} },
-    { name: "Usage History", path: "/", action: function () {} },
+    { name: "Usage History", path: "/usagehistory", action: function () {} },
     { name: "Credit History", path: "/credithistory", action: function () {} },
   ];
   const navItemsLoggedOut = [
@@ -479,13 +479,17 @@ const NavBar = () => {
                 <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
                   <div className="flex-shrink-0 flex items-center">
                     <img
+                      width="500"
+                      height="600"
                       className="block lg:hidden h-8 w-auto"
-                      src="https://tailwindui.com/img/logos/workflow-mark-indigo-500.svg"
+                      src={require("../mediaAssets/logo.png")}
                       alt="A la cloud"
                     />
                     <img
+                      width="500"
+                      height="600"
                       className="hidden lg:block h-8 w-auto"
-                      src="https://tailwindui.com/img/logos/workflow-logo-indigo-500-mark-white-text.svg"
+                      src={require("../mediaAssets/logo.png")}
                       alt="A la cloud"
                     />
                   </div>

@@ -451,15 +451,18 @@ const FileExplorer = () => {
                     <span className="sr-only">Edit</span>
                   </th>
                 </tr>
-              </thead>
-              {fileList.objectList.map((file) => {
-                if (file.Size == 0) return <></>;
-                let arraySplit = file.Key.split("/");
-                let fileName = arraySplit[arraySplit.length - 1];
+              </thead>{" "}
+              <tbody>
+                {fileList.objectList.map((file) => {
+                  if (file.Size == 0) return <></>;
+                  let arraySplit = file.Key.split("/");
+                  let fileName = arraySplit[arraySplit.length - 1];
 
-                return (
-                  <tbody key={nanoid()}>
-                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 transition duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-600">
+                  return (
+                    <tr
+                      key={nanoid()}
+                      className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 transition duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
                       <th
                         scope="row"
                         className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
@@ -491,9 +494,9 @@ const FileExplorer = () => {
                         </button>
                       </td>
                     </tr>
-                  </tbody>
-                );
-              })}
+                  );
+                })}
+              </tbody>
             </table>
           </div>
         </div>

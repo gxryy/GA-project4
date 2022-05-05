@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Route, Routes } from "react-router-dom";
 import CognitoCtx from "./context/CognitoCtx";
 import Home from "./components/Home";
@@ -7,6 +7,7 @@ import ShareManager from "./components/ShareManager";
 import CreditHistory from "./components/CreditHistory";
 import SharedDownload from "./components/SharedDownload";
 import NavBar from "./components/NavBar";
+import UsageHistory from "./components/UsageHistory";
 
 import "./dependencies/config";
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/" element={<Home />}></Route>
             <Route path="/drive" element={<Drive />}></Route>
             <Route path="/credithistory" element={<CreditHistory />}></Route>
+            <Route path="/usagehistory" element={<UsageHistory />}></Route>
             <Route path="/shareManager" element={<ShareManager />}></Route>
             <Route
               path="/download/:url_uuid"
