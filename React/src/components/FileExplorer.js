@@ -1,7 +1,6 @@
 import React, { useContext, useState, Fragment, useEffect } from "react";
 import { Transition, Dialog } from "@headlessui/react";
 
-import FolderDisplay from "./FolderDisplay";
 import FileDisplay from "./FileDisplay";
 import ExplorerCtx from "../context/ExplorerCtx";
 import CognitoCtx from "../context/CognitoCtx";
@@ -31,7 +30,7 @@ const FileExplorer = () => {
         ></img>
       );
     else if (uploadModalStage == 2) {
-      <h1>Upload Completed</h1>;
+      setUploadModalDisplay(<h1>Upload Completed</h1>);
     } else setUploadModalDisplay(<></>);
   }, [uploadModalStage]);
 
@@ -193,9 +192,28 @@ const FileExplorer = () => {
         </div>
 
         <hr />
-        {fileList.folderList.map((folder) => (
-          <FolderDisplay folder={folder} key={nanoid()}></FolderDisplay>
-        ))}
+        <div className="w-10/12 mx-auto">
+          <div class="flex flex-wrap overflow-hidden w-full my-2 ">
+            {fileList.folderList.map((folder) => (
+              <div
+                className="my-2 px-6 w-1/6 overflow-hidden sm:w-1 md:w-1/3 lg:w-1/6 xl:w-1/6  rounded-xl"
+                onClick={() =>
+                  getFileList(
+                    `${ExplorerContext.fileList.currentDirectory + folder}/`
+                  )
+                }
+              >
+                <img
+                  src={require("../mediaAssets/folder.png")}
+                  className="mx-auto"
+                ></img>
+                {folder}
+              </div>
+            ))}
+          </div>
+        </div>
+        <hr />
+
         {fileList.objectList.map((file) => (
           <FileDisplay file={file} key={nanoid()}></FileDisplay>
         ))}

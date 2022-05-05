@@ -10,7 +10,6 @@ import NavBar from "./components/NavBar";
 import ServerTest from "./components/ServerTest";
 
 import "./dependencies/config";
-import FolderDisplay from "./components/FolderDisplay";
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
 
 export default function App() {
