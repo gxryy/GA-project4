@@ -15,24 +15,114 @@ const FileExplorer = () => {
   let username = cognitoUser.username;
   const [uploadFile, setUploadFile] = useState();
   const [createFolerModal, setCreateFolderModal] = useState(false);
-  const [uploadModal, setUploadModal] = useState(false);
-  const [uploadModalStage, setUploadModalStage] = useState(0); // 0= nothing 1=uploading, 2=completed
-  const [uploadModalDisplay, setUploadModalDisplay] = useState(<></>);
+  const [loadModal, setloadModal] = useState(false);
+  const [loadModalStage, setloadModalStage] = useState(0); // 0= nothing 1=uploading, 2=ul completed, 3= downloading
+  const [loadModalDisplay, setloadModalDisplay] = useState(<></>);
+  const [shareModal, setShareModal] = useState(false);
+  const [shareDetails, setShareDetails] = useState({
+    fileName: "",
+    fileKey: "",
+    expiry: "",
+    url: "",
+  });
+  const [shareStage, setShareStage] = useState(0); // 0= nothing,  1 = expiry setter, 2=url
+  const [shareModalDisplay, setShareModalDisplay] = useState(<></>);
+  const [noExpiry, setNoExpiry] = useState(false);
 
   let fileList = ExplorerContext.fileList;
 
   useEffect(() => {
-    if (uploadModalStage == 1)
-      setUploadModalDisplay(
+    if (loadModalStage == 1)
+      setloadModalDisplay(
         <img
           src={require("../mediaAssets/uploading.gif")}
           className="mx-auto"
         ></img>
       );
-    else if (uploadModalStage == 2) {
-      setUploadModalDisplay(<h1>Upload Completed</h1>);
-    } else setUploadModalDisplay(<></>);
-  }, [uploadModalStage]);
+    else if (loadModalStage == 2)
+      setloadModalDisplay(<h1>Upload Completed</h1>);
+    else if (loadModalStage == 3)
+      setloadModalDisplay(
+        <img
+          src={require("../mediaAssets/download.gif")}
+          className="mx-auto"
+        ></img>
+      );
+    else setloadModalDisplay(<></>);
+  }, [loadModalStage]);
+
+  useEffect(() => {
+    console.log(shareDetails);
+  }, [shareDetails]);
+
+  useEffect(() => {
+    console.log(noExpiry);
+  }, [noExpiry]);
+
+  useEffect(() => {
+    if (shareStage == 1)
+      setShareModalDisplay(
+        <>
+          <p>Sharing {shareDetails.fileName}</p>
+          <p>Set Expiry:</p>
+          <form onSubmit={expiryHandler}>
+            <input type="date" name="date" disabled={noExpiry}></input>
+            <input type="time" name="time" disabled={noExpiry}></input>
+            <div>
+              <input
+                type="checkbox"
+                name="expiryBox"
+                onClick={(event) => {
+                  setNoExpiry(event.target.checked);
+                }}
+              />
+              <label
+                className="form-check-label inline-block text-gray-800"
+                htmlFor="flexCheckChecked"
+              >
+                No Expiry
+              </label>
+            </div>
+
+            <input
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5  rounded  mt-4 w-full"
+              value="Share"
+            ></input>
+          </form>
+        </>
+      );
+    else if (shareStage == 2)
+      setShareModalDisplay(
+        <div>
+          <p>File Name: {shareDetails.fileName}</p>
+          <p>
+            Expiry:{" "}
+            {shareDetails.expiry == "2099-12-31T00:00:00.000Z"
+              ? "No Expiry"
+              : shareDetails.expiry}
+          </p>
+          <input
+            className="w-full"
+            type="text"
+            value={shareDetails.url}
+            readOnly
+          ></input>
+          <button
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5  rounded  mt-4 w-full"
+            onClick={() => {
+              navigator.clipboard.writeText(shareDetails.url);
+              setTimeout(() => {
+                setShareModal(false);
+              }, 2000);
+            }}
+          >
+            Copy to Clipboard
+          </button>
+        </div>
+      );
+    else setShareModalDisplay(<></>);
+  }, [shareStage]);
 
   const createFolderHandler = (event) => {
     event.preventDefault();
@@ -63,9 +153,31 @@ const FileExplorer = () => {
       .catch((error) => console.log("error", error));
   };
 
+  const expiryHandler = (event) => {
+    event.preventDefault();
+    console.log(event.target.date.value);
+    console.log(event.target.time.value);
+    console.log(event.target.expiryBox.checked);
+    let expiry = new Date();
+    if (event.target.expiryBox.checked) expiry = new Date("2099-12-31");
+    else
+      expiry = new Date(
+        `${event.target.date.value}T${event.target.time.value}`
+      );
+
+    let expirystr = expiry.toISOString();
+    console.log(expirystr);
+
+    setShareDetails((prevState) => {
+      console.log(prevState);
+      return { ...prevState, expiry: expirystr };
+    });
+    console.log(shareDetails.expiry);
+  };
+
   const uploadHandler = async () => {
-    setUploadModal(true);
-    setUploadModalStage(1);
+    setloadModal(true);
+    setloadModalStage(1);
     const postFile = (file) => {
       // console.log(file);
       return new Promise(async (resolve, reject) => {
@@ -95,8 +207,8 @@ const FileExplorer = () => {
     for (let i = 0; i < uploadFile.length; i++) {
       await postFile(uploadFile[i]);
       if (i == uploadFile.length - 1) {
-        setUploadModalStage(2);
-        setTimeout(() => setUploadModal(false), 2000);
+        setloadModalStage(2);
+        setTimeout(() => setloadModal(false), 2000);
       }
 
       console.log(`file ${i + 1} uploaded`);
@@ -137,6 +249,124 @@ const FileExplorer = () => {
     getFileList(nwd);
   };
 
+  const toReadable = (sizeInBytes) => {
+    let units = ["bytes", "KB", "MB", "GB", "TB"];
+    let size = sizeInBytes;
+    let counter = 0;
+    while (size > 1000) {
+      size = size / 1000;
+      counter++;
+    }
+    size = (Math.round(size * 100) / 100).toFixed(2);
+    return size + units[counter];
+  };
+
+  const downloadHandler = async (fileKey) => {
+    setloadModalStage(3);
+    setloadModal(true);
+
+    let arraySplit = fileKey.split("/");
+    let fileName = arraySplit[arraySplit.length - 1];
+    // --- FETCH ---
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    let requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: JSON.stringify({
+        username,
+        Key: fileKey,
+        accessToken,
+      }),
+      redirect: "follow",
+    };
+
+    fetch("http://127.0.0.1:5001/drive/download", requestOptions)
+      .then((response) => {
+        return response.blob();
+      })
+      .then((data) => {
+        var a = document.createElement("a");
+        a.href = window.URL.createObjectURL(data);
+        a.download = fileName;
+        a.click();
+        setTimeout(() => {
+          setloadModal(false);
+        }, 1000);
+        setTimeout(() => {
+          setloadModalStage(0);
+        }, 1200);
+      })
+      .catch((error) => console.log("error", error));
+  };
+
+  const deleteHandler = async (fileKey) => {
+    // var myHeaders = new Headers();
+    // myHeaders.append("Content-Type", "application/json");
+    // var raw = JSON.stringify({
+    //   filename: file.Key,
+    //   username,
+    //   accessToken,
+    // });
+    // var requestOptions = {
+    //   method: "DELETE",
+    //   headers: myHeaders,
+    //   body: raw,
+    //   redirect: "follow",
+    // };
+    // fetch("http://127.0.0.1:5001/drive/delete", requestOptions)
+    //   .then((response) => response.text())
+    //   .then((result) => console.log(result))
+    //   .catch((error) => console.log("error", error));
+  };
+
+  const shareHandler = async (fileKey) => {
+    console.log(fileKey);
+    let arraySplit = fileKey.split("/");
+    let fileName = arraySplit[arraySplit.length - 1];
+    setShareModal(true);
+    setShareStage(1);
+    setShareDetails((prevState) => {
+      return { ...prevState, fileName, fileKey };
+    });
+  };
+
+  const getShareURL = () => {
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    console.log(shareDetails.expiry);
+
+    var raw = JSON.stringify({
+      username,
+      s3_key: shareDetails.fileKey,
+      expiry: shareDetails.expiry,
+      accessToken,
+    });
+
+    var requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("http://localhost:5001/drive/getsharelink", requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        let response = JSON.parse(result);
+
+        setShareDetails((prev) => {
+          return {
+            ...prev,
+            url: `http://localhost:3000/download/${response.url_uuid}`,
+          };
+        });
+        setShareStage(2);
+      })
+      .catch((error) => console.log("error", error));
+  };
+
   return (
     <>
       {/* ----- MAIN PAGE ----- */}
@@ -151,7 +381,7 @@ const FileExplorer = () => {
           </button>
         </div>
 
-        <div className="flex justify-center my-2">
+        <div className="flex justify-center my-1">
           <div className="flex justify-center mb-3 w-2/3">
             <button
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5  rounded mx-4 w-60"
@@ -191,17 +421,17 @@ const FileExplorer = () => {
           </div>
         </div>
 
-        <hr />
-        <div className="w-10/12 mx-auto">
-          <div class="flex flex-wrap overflow-hidden w-full my-2 ">
+        <div className="w-11/12 mx-auto">
+          <div className="flex flex-wrap overflow-hidden w-full my-1 ">
             {fileList.folderList.map((folder) => (
               <div
-                className="my-2 px-6 w-1/6 overflow-hidden sm:w-1 md:w-1/3 lg:w-1/6 xl:w-1/6  rounded-xl"
+                className="my-2 px-8 w-1/6 overflow-hidden sm:w-1 md:w-1/3 lg:w-1/6 xl:w-1/6  rounded-xl"
                 onClick={() =>
                   getFileList(
                     `${ExplorerContext.fileList.currentDirectory + folder}/`
                   )
                 }
+                key={nanoid()}
               >
                 <img
                   src={require("../mediaAssets/folder.png")}
@@ -211,12 +441,67 @@ const FileExplorer = () => {
               </div>
             ))}
           </div>
-        </div>
-        <hr />
+          <hr />
+          <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400 table-auto">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    File name
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Size
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    <span className="sr-only">Edit</span>
+                  </th>
+                </tr>
+              </thead>
+              {fileList.objectList.map(
+                (file) => {
+                  let arraySplit = file.Key.split("/");
+                  let fileName = arraySplit[arraySplit.length - 1];
 
-        {fileList.objectList.map((file) => (
-          <FileDisplay file={file} key={nanoid()}></FileDisplay>
-        ))}
+                  return (
+                    <tbody key={nanoid()}>
+                      <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 transition duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-600">
+                        <th
+                          scope="row"
+                          className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
+                        >
+                          {fileName}
+                        </th>
+                        <td className="px-6 py-4">{toReadable(file.Size)}</td>
+                        <td className="px-2 py-4 text-right">
+                          <button
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
+                            onClick={() => downloadHandler(file.Key)}
+                          >
+                            Download
+                          </button>
+                          <button
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
+                            onClick={() => shareHandler(file.Key)}
+                          >
+                            Share
+                          </button>
+                          <button
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
+                            onClick={() => deleteHandler(file.Key)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  );
+                }
+
+                // <FileDisplay file={file} key={nanoid()}></FileDisplay>
+              )}
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* ----- CREATE FOLDER MODAL ----- */}
@@ -283,13 +568,13 @@ const FileExplorer = () => {
         </Dialog>
       </Transition>
 
-      {/* ----- UPLOAD MODAL ----- */}
+      {/* ----- LOAD MODAL ----- */}
 
-      <Transition appear show={uploadModal} as={Fragment}>
+      <Transition appear show={loadModal} as={Fragment}>
         <Dialog
           as="div"
           className="relative z-10"
-          onClose={() => setUploadModal(false)}
+          onClose={() => setloadModal(false)}
         >
           <Transition.Child
             as={Fragment}
@@ -319,9 +604,56 @@ const FileExplorer = () => {
                     as="h3"
                     className="text-lg font-medium leading-6 text-gray-900"
                   >
-                    Upload
+                    {loadModalStage == 3 ? `Download` : `Upload`}
                   </Dialog.Title>
-                  {uploadModalDisplay}
+                  {loadModalDisplay}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* ----- SHARE MODAL ----- */}
+
+      <Transition appear show={shareModal} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-10"
+          onClose={() => setShareModal(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900"
+                  >
+                    Share File
+                  </Dialog.Title>
+
+                  {shareModalDisplay}
                 </Dialog.Panel>
               </Transition.Child>
             </div>
