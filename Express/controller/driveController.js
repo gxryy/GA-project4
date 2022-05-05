@@ -106,27 +106,27 @@ drive.post("/getsharelink", async (req, res) => {
   let url_uuid = nanoid();
   console.log(req.body);
 
-  // try {
-  //   const response = await Shares.create({
-  //     username: req.body.username,
-  //     url_uuid: url_uuid,
-  //     s3_key: req.body.s3_key,
-  //     expiry: req.body.expiry,
-  //     download_counter: 0,
-  //     is_deleted: false,
-  //   });
+  try {
+    const response = await Shares.create({
+      username: req.body.username,
+      url_uuid: url_uuid,
+      s3_key: req.body.s3_key,
+      expiry: req.body.expiry,
+      download_counter: 0,
+      is_deleted: false,
+    });
 
-  //   res.json({ url_uuid, expiry: response.dataValues.expiry });
-  // } catch (err) {
-  //   console.log(err);
-  //   res.status(500);
-  // }
+    res.json({ url_uuid, expiry: response.dataValues.expiry });
+  } catch (err) {
+    console.log(err);
+    res.status(500);
+  }
 });
 
 drive.delete("/delete", async (req, res) => {
-  console.log(`deleting`);
-  filename = req.body.filename;
-  let response = await deleteFile(filename);
+  fileKey = req.body.fileKey;
+  let response = await deleteFile(fileKey);
+  console.log(`${fileKey} has been deleted`);
   res.send(response);
 });
 

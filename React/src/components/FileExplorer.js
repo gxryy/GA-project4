@@ -19,15 +19,19 @@ const FileExplorer = () => {
   const [loadModalStage, setloadModalStage] = useState(0); // 0= nothing 1=uploading, 2=ul completed, 3= downloading
   const [loadModalDisplay, setloadModalDisplay] = useState(<></>);
   const [shareModal, setShareModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
   const [shareDetails, setShareDetails] = useState({
     fileName: "",
     fileKey: "",
     expiry: "",
     url: "",
   });
-  const [shareStage, setShareStage] = useState(0); // 0= nothing,  1 = expiry setter, 2=url
+  const [shareStage, setShareStage] = useState(0); // 0= nothing,  1 = expiry setter, 2=loading. 3=url page
   const [shareModalDisplay, setShareModalDisplay] = useState(<></>);
-  const [noExpiry, setNoExpiry] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState({
+    fileName: "",
+    fileKey: "",
+  });
 
   let fileList = ExplorerContext.fileList;
 
@@ -56,26 +60,16 @@ const FileExplorer = () => {
   }, [shareDetails]);
 
   useEffect(() => {
-    console.log(noExpiry);
-  }, [noExpiry]);
-
-  useEffect(() => {
     if (shareStage == 1)
       setShareModalDisplay(
         <>
           <p>Sharing {shareDetails.fileName}</p>
           <p>Set Expiry:</p>
-          <form onSubmit={expiryHandler}>
-            <input type="date" name="date" disabled={noExpiry}></input>
-            <input type="time" name="time" disabled={noExpiry}></input>
+          <form onSubmit={getShareURLHandler}>
+            <input type="date" name="date"></input>
+            <input type="time" name="time"></input>
             <div>
-              <input
-                type="checkbox"
-                name="expiryBox"
-                onClick={(event) => {
-                  setNoExpiry(event.target.checked);
-                }}
-              />
+              <input type="checkbox" name="expiryBox" />
               <label
                 className="form-check-label inline-block text-gray-800"
                 htmlFor="flexCheckChecked"
@@ -92,7 +86,14 @@ const FileExplorer = () => {
           </form>
         </>
       );
-    else if (shareStage == 2)
+    else if (shareStage == 2) {
+      setShareModalDisplay(
+        <img
+          src={require("../mediaAssets/loading_spinner.gif")}
+          className="mx-auto"
+        ></img>
+      );
+    } else if (shareStage == 3) {
       setShareModalDisplay(
         <div>
           <p>File Name: {shareDetails.fileName}</p>
@@ -121,7 +122,7 @@ const FileExplorer = () => {
           </button>
         </div>
       );
-    else setShareModalDisplay(<></>);
+    } else setShareModalDisplay(<></>);
   }, [shareStage]);
 
   const createFolderHandler = (event) => {
@@ -153,25 +154,56 @@ const FileExplorer = () => {
       .catch((error) => console.log("error", error));
   };
 
-  const expiryHandler = (event) => {
+  const getShareURLHandler = (event) => {
     event.preventDefault();
-    console.log(event.target.date.value);
-    console.log(event.target.time.value);
-    console.log(event.target.expiryBox.checked);
     let expiry = new Date();
     if (event.target.expiryBox.checked) expiry = new Date("2099-12-31");
     else
       expiry = new Date(
         `${event.target.date.value}T${event.target.time.value}`
       );
+    setShareStage(2);
 
     let expirystr = expiry.toISOString();
-    console.log(expirystr);
 
     setShareDetails((prevState) => {
       console.log(prevState);
       return { ...prevState, expiry: expirystr };
     });
+
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      username,
+      s3_key: shareDetails.fileKey,
+      expiry: expirystr,
+      accessToken,
+    });
+
+    var requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("http://localhost:5001/drive/getsharelink", requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        let response = JSON.parse(result);
+        console.log(response);
+
+        setShareDetails((prev) => {
+          return {
+            ...prev,
+            url: `http://localhost:3000/download/${response.url_uuid}`,
+          };
+        });
+        setShareStage(3);
+      })
+      .catch((error) => console.log("error", error));
+
     console.log(shareDetails.expiry);
   };
 
@@ -208,6 +240,7 @@ const FileExplorer = () => {
       await postFile(uploadFile[i]);
       if (i == uploadFile.length - 1) {
         setloadModalStage(2);
+        getFileList(ExplorerContext.currentDirectory);
         setTimeout(() => setloadModal(false), 2000);
       }
 
@@ -301,24 +334,26 @@ const FileExplorer = () => {
       .catch((error) => console.log("error", error));
   };
 
-  const deleteHandler = async (fileKey) => {
-    // var myHeaders = new Headers();
-    // myHeaders.append("Content-Type", "application/json");
-    // var raw = JSON.stringify({
-    //   filename: file.Key,
-    //   username,
-    //   accessToken,
-    // });
-    // var requestOptions = {
-    //   method: "DELETE",
-    //   headers: myHeaders,
-    //   body: raw,
-    //   redirect: "follow",
-    // };
-    // fetch("http://127.0.0.1:5001/drive/delete", requestOptions)
-    //   .then((response) => response.text())
-    //   .then((result) => console.log(result))
-    //   .catch((error) => console.log("error", error));
+  const deleteHandler = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    var raw = JSON.stringify({
+      fileKey: fileToDelete.fileKey,
+      username,
+      accessToken,
+    });
+    var requestOptions = {
+      method: "DELETE",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+    fetch("http://127.0.0.1:5001/drive/delete", requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        setDeleteModal(false);
+      })
+      .catch((error) => console.log("error", error));
   };
 
   const shareHandler = async (fileKey) => {
@@ -330,41 +365,6 @@ const FileExplorer = () => {
     setShareDetails((prevState) => {
       return { ...prevState, fileName, fileKey };
     });
-  };
-
-  const getShareURL = () => {
-    let myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    console.log(shareDetails.expiry);
-
-    var raw = JSON.stringify({
-      username,
-      s3_key: shareDetails.fileKey,
-      expiry: shareDetails.expiry,
-      accessToken,
-    });
-
-    var requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow",
-    };
-
-    fetch("http://localhost:5001/drive/getsharelink", requestOptions)
-      .then((response) => response.text())
-      .then((result) => {
-        let response = JSON.parse(result);
-
-        setShareDetails((prev) => {
-          return {
-            ...prev,
-            url: `http://localhost:3000/download/${response.url_uuid}`,
-          };
-        });
-        setShareStage(2);
-      })
-      .catch((error) => console.log("error", error));
   };
 
   return (
@@ -459,6 +459,7 @@ const FileExplorer = () => {
               </thead>
               {fileList.objectList.map(
                 (file) => {
+                  if (file.Size == 0) return <></>;
                   let arraySplit = file.Key.split("/");
                   let fileName = arraySplit[arraySplit.length - 1];
 
@@ -487,7 +488,10 @@ const FileExplorer = () => {
                           </button>
                           <button
                             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
-                            onClick={() => deleteHandler(file.Key)}
+                            onClick={() => {
+                              setFileToDelete({ fileName, fileKey: file.Key });
+                              setDeleteModal(true);
+                            }}
                           >
                             Delete
                           </button>
@@ -654,6 +658,66 @@ const FileExplorer = () => {
                   </Dialog.Title>
 
                   {shareModalDisplay}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* ----- DELETE MODAL ----- */}
+
+      <Transition appear show={deleteModal} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-10"
+          onClose={() => setDeleteModal(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900"
+                  >
+                    Confirm Delete
+                  </Dialog.Title>
+                  <p>{fileToDelete.fileName} will be deleted.</p>
+                  <div className="flex justify-center">
+                    <button
+                      className="bg-gray-400 hover:bg-gray-600 text-white font-bold py-1.5  rounded mx-2 mt-4 w-1/2"
+                      onClick={() => setDeleteModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-1.5  rounded mx-2 mt-4 w-1/2"
+                      onClick={deleteHandler}
+                    >
+                      Confirm Delete
+                    </button>
+                  </div>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
