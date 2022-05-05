@@ -133,6 +133,8 @@ drive.delete("/delete", async (req, res) => {
 drive.post("/getFileList", async (req, res) => {
   username = req.body.username;
   path = req.body.path;
+  console.log(username);
+  console.log(path);
   params = {
     Prefix: username + path,
     Delimiter: "/",

@@ -1,7 +1,6 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, Fragment } from "react";
 import CognitoCtx from "../context/CognitoCtx";
 import { useNavigate } from "react-router-dom";
-import { Fragment } from "react";
 import { Disclosure, Menu, Transition, Dialog } from "@headlessui/react";
 import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import { nanoid } from "nanoid";
@@ -18,6 +17,7 @@ const NavBar = () => {
   const navItemsLoggedIn = [
     { name: "Home", path: "/", action: function () {} },
     { name: "Drive", path: "/drive", action: function () {} },
+    { name: "Usage History", path: "/", action: function () {} },
   ];
   const navItemsLoggedOut = [
     { name: "Home", path: "/", action: function () {} },

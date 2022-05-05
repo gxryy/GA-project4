@@ -26,16 +26,6 @@ export default function App() {
   return (
     <>
       <div className="App">
-        <h4>App Component</h4>
-        <a href="/signup"> Sign Up </a>
-        <a href="/signin"> Sign In </a>
-        <a href="/signout"> Sign Out </a>
-        <a href="/verify"> Verify </a>
-        <a href="/test"> Test </a>
-        <a href="/drive"> Drive </a>
-        <a href="/servertest"> Server Test </a>
-        <a href="/download">Public Download </a>
-
         <CognitoCtx.Provider value={{ userPool }}>
           <NavBar></NavBar>
           <Routes>

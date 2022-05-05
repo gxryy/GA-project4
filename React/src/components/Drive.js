@@ -123,15 +123,17 @@ const Drive = () => {
 
   return (
     <div>
-      <h4>Drive component</h4>
-      {/* <p>The auth token {authToken}</p> */}
+      <div className="flex justify-around text-lg bg-gray-200">
+        <p>Total Storage Used: {toReadable(storageUsed.totalSize)}</p>
+        <p onClick={() => navigate("/credithistory")}>
+          Credits remaining: {credits}
+        </p>
+      </div>
+      <div className="md:w-1/3 text-3xl">
+        <p>My Drive</p>
+      </div>
 
-      <h4>Total Storage Used: {toReadable(storageUsed.totalSize)}</h4>
-      <h4 onClick={() => navigate("/credithistory")}>
-        Credits remaining: {credits}
-      </h4>
-
-      <ExplorerCtx.Provider value={{ fileList, setFileList }}>
+      <ExplorerCtx.Provider value={{ fileList, setFileList, getFileList }}>
         <FileExplorer />
       </ExplorerCtx.Provider>
       <input
