@@ -7,6 +7,7 @@ const SharedDownload = (props) => {
   const { url_uuid } = useParams();
   const [fileName, setFileName] = useState("");
   const [loadModal, setloadModal] = useState(false);
+  const [expired, setExpired] = useState(false);
 
   useEffect(() => {
     getFileName();
@@ -28,6 +29,7 @@ const SharedDownload = (props) => {
     fetch("http://localhost:5001/publicfiledetails", requestOptions)
       .then((response) => {
         if (response.status == 200) return response.text();
+        else if (response.status == 400) setExpired(true);
       })
       .then((result) => setFileName(result))
       .catch((error) => console.log("error", error));
@@ -64,14 +66,22 @@ const SharedDownload = (props) => {
   return (
     <>
       <div>
-        <p className="text-4xl my-2">Download File</p>
-        <p className="mt-3 text-xl">Filename: {fileName}</p>
-        <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5  rounded  mt-4 w-80"
-          onClick={downloadHandler}
-        >
-          Download
-        </button>
+        {expired ? (
+          <>
+            <p className="text-6xl mt-4">Link has Expired</p>
+          </>
+        ) : (
+          <>
+            <p className="text-4xl my-2">Download File</p>
+            <p className="mt-3 text-xl">Filename: {fileName}</p>
+            <button
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5  rounded  mt-4 w-80"
+              onClick={downloadHandler}
+            >
+              Download
+            </button>
+          </>
+        )}
       </div>
 
       {/* ----- LOAD MODAL ----- */}

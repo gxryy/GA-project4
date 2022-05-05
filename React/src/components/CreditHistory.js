@@ -32,10 +32,6 @@ const CreditHistory = () => {
     }
   }, []);
 
-  useEffect(() => {
-    console.log(creditHistory);
-  }, [creditHistory]);
-
   const getCreditHistory = () => {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -107,7 +103,9 @@ const CreditHistory = () => {
                     className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
                   >
                     <div className=" flex flex-col">
-                      <p className="text-lg my-2 mb-1">{`${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`}</p>
+                      <p className="text-lg my-2 mb-1">{`${date.getDate()}-${
+                        date.getMonth() + 1
+                      }-${date.getFullYear()}`}</p>
                     </div>
                   </th>
 

@@ -151,10 +151,16 @@ app.post("/publicfiledetails", async (req, res) => {
     const share = await Shares.findOne({
       where: { [Op.and]: [{ url_uuid }, { is_deleted: false }] },
     });
-    let s3_key = share.dataValues.s3_key;
-    let arraySplit = s3_key.split("/");
-    let fileName = arraySplit[arraySplit.length - 1];
-    res.send(fileName);
+    let expiry = share.expiry;
+    let now = new Date();
+    if (expiry > now) {
+      let s3_key = share.dataValues.s3_key;
+      let arraySplit = s3_key.split("/");
+      let fileName = arraySplit[arraySplit.length - 1];
+      res.send(fileName);
+    } else {
+      res.sendStatus(400);
+    }
   } catch (err) {
     console.log(err);
     res.sendStatus(400);
@@ -170,7 +176,6 @@ app.post("/publicdownload", async (req, res) => {
       where: { [Op.and]: [{ url_uuid }, { is_deleted: false }] },
     });
     let shareDetails = share?.dataValues;
-    console.log(shareDetails);
     let expiry = shareDetails.expiry;
     let now = new Date();
     if (expiry > now) {
@@ -207,6 +212,7 @@ app.get("/logstorageused", async (req, res) => {
       let size = 0;
 
       let response = await listObjects(params);
+      console.log(`response is ${response}`);
       response.objectList.forEach((object) => {
         size += object.Size;
       });
@@ -215,7 +221,9 @@ app.get("/logstorageused", async (req, res) => {
     let createCounter = 0;
     let updateCounter = 0;
     for await (let user of allUsers) {
+      console.log(`starting for ${user.username}`);
       let storage_used = await getStorage(user.username);
+      console.log(`got storage`);
 
       const existingLog = await Storage.findOne({
         where: {
@@ -234,6 +242,7 @@ app.get("/logstorageused", async (req, res) => {
         });
         createCounter++;
       }
+      console.log(`finishing for ${user.username}`);
     }
     res.json(`Created : ${createCounter} Updated: ${updateCounter}`);
   } catch (err) {

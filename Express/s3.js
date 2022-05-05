@@ -67,8 +67,10 @@ const listObjects = (params) => {
     let ContinuationToken = null;
     let objectList = [];
     let folderList = [];
+    let number = 0;
 
-    while (ContinuationToken || objectList.length == 0) {
+    while (ContinuationToken || number == 0) {
+      number += 1;
       try {
         const response = await s3
           .listObjectsV2({ ...params, Bucket: bucketName, ContinuationToken })

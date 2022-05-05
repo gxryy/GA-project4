@@ -20,6 +20,7 @@ const NavBar = () => {
     { name: "Shared Links", path: "/shareManager", action: function () {} },
     { name: "Usage History", path: "/usagehistory", action: function () {} },
     { name: "Credit History", path: "/credithistory", action: function () {} },
+    { name: "Top Up", path: "/topup", action: function () {} },
   ];
   const navItemsLoggedOut = [
     { name: "Home", path: "/", action: function () {} },
@@ -46,10 +47,6 @@ const NavBar = () => {
         cognitoUser?.signOut();
         setLoggedIn(0);
       },
-    },
-    {
-      name: "Tester",
-      path: "/signin",
     },
   ];
   const menuItemsLoggedOut = [

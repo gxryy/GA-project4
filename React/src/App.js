@@ -8,6 +8,7 @@ import CreditHistory from "./components/CreditHistory";
 import SharedDownload from "./components/SharedDownload";
 import NavBar from "./components/NavBar";
 import UsageHistory from "./components/UsageHistory";
+import TopUp from "./components/TopUp";
 
 import "./dependencies/config";
 const AmazonCognitoIdentity = require("amazon-cognito-identity-js");
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/credithistory" element={<CreditHistory />}></Route>
             <Route path="/usagehistory" element={<UsageHistory />}></Route>
             <Route path="/shareManager" element={<ShareManager />}></Route>
+            <Route path="/topup" element={<TopUp />}></Route>
             <Route
               path="/download/:url_uuid"
               element={<SharedDownload />}
