@@ -1,7 +1,5 @@
 import React, { useContext, useState, Fragment, useEffect } from "react";
 import { Transition, Dialog } from "@headlessui/react";
-
-import FileDisplay from "./FileDisplay";
 import ExplorerCtx from "../context/ExplorerCtx";
 import CognitoCtx from "../context/CognitoCtx";
 import { nanoid } from "nanoid";
@@ -66,8 +64,8 @@ const FileExplorer = () => {
           <p>Sharing {shareDetails.fileName}</p>
           <p>Set Expiry:</p>
           <form onSubmit={getShareURLHandler}>
-            <input type="date" name="date"></input>
-            <input type="time" name="time"></input>
+            <input type="datetime-local" name="datetime"></input>
+
             <div>
               <input type="checkbox" name="expiryBox" />
               <label
@@ -158,10 +156,7 @@ const FileExplorer = () => {
     event.preventDefault();
     let expiry = new Date();
     if (event.target.expiryBox.checked) expiry = new Date("2099-12-31");
-    else
-      expiry = new Date(
-        `${event.target.date.value}T${event.target.time.value}`
-      );
+    else expiry = new Date(event.target.datetime.value);
     setShareStage(2);
 
     let expirystr = expiry.toISOString();
@@ -457,52 +452,48 @@ const FileExplorer = () => {
                   </th>
                 </tr>
               </thead>
-              {fileList.objectList.map(
-                (file) => {
-                  if (file.Size == 0) return <></>;
-                  let arraySplit = file.Key.split("/");
-                  let fileName = arraySplit[arraySplit.length - 1];
+              {fileList.objectList.map((file) => {
+                if (file.Size == 0) return <></>;
+                let arraySplit = file.Key.split("/");
+                let fileName = arraySplit[arraySplit.length - 1];
 
-                  return (
-                    <tbody key={nanoid()}>
-                      <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 transition duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <th
-                          scope="row"
-                          className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
+                return (
+                  <tbody key={nanoid()}>
+                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 transition duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-600">
+                      <th
+                        scope="row"
+                        className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap"
+                      >
+                        {fileName}
+                      </th>
+                      <td className="px-6 py-4">{toReadable(file.Size)}</td>
+                      <td className="px-2 py-4 text-right">
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
+                          onClick={() => downloadHandler(file.Key)}
                         >
-                          {fileName}
-                        </th>
-                        <td className="px-6 py-4">{toReadable(file.Size)}</td>
-                        <td className="px-2 py-4 text-right">
-                          <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
-                            onClick={() => downloadHandler(file.Key)}
-                          >
-                            Download
-                          </button>
-                          <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
-                            onClick={() => shareHandler(file.Key)}
-                          >
-                            Share
-                          </button>
-                          <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
-                            onClick={() => {
-                              setFileToDelete({ fileName, fileKey: file.Key });
-                              setDeleteModal(true);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  );
-                }
-
-                // <FileDisplay file={file} key={nanoid()}></FileDisplay>
-              )}
+                          Download
+                        </button>
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
+                          onClick={() => shareHandler(file.Key)}
+                        >
+                          Share
+                        </button>
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-2 rounded mx-2"
+                          onClick={() => {
+                            setFileToDelete({ fileName, fileKey: file.Key });
+                            setDeleteModal(true);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                );
+              })}
             </table>
           </div>
         </div>

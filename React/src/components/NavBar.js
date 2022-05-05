@@ -17,6 +17,7 @@ const NavBar = () => {
   const navItemsLoggedIn = [
     { name: "Home", path: "/", action: function () {} },
     { name: "Drive", path: "/drive", action: function () {} },
+    { name: "Shared Links", path: "/shareManager", action: function () {} },
     { name: "Usage History", path: "/", action: function () {} },
   ];
   const navItemsLoggedOut = [
