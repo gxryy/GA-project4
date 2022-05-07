@@ -354,7 +354,6 @@ const NavBar = () => {
       onSuccess: function (result) {
         var accessToken = result.getAccessToken().getJwtToken();
         CognitoContext.accessToken = accessToken;
-        console.log(`accessToken is ${accessToken}`);
         setLoggedIn(1);
         navigate("/drive");
       },

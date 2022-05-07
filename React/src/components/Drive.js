@@ -39,8 +39,6 @@ const Drive = () => {
       getStorageUsed();
       getCreditsRemaining();
       getFileList(fileList.currentDirectory);
-      console.log(cognitoUser);
-      console.log(CognitoContext);
     } else {
       navigate("/");
     }
